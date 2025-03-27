@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modification mot de passe{% endblock %}
+
+{% block body %}
+    <body style="background: #0F75AD">
+        <div class="container text-center text-white">
+            <div class="row vh-100 justify-content-center align-items-center">
+                <div class="col-12 text-white">
+                    <div class="mail row fs-4">
+                        <div>Si un compte existe avec cette adresse, alors un email sera envoyé avec un lien de réinitialisation du mot de passe</div>
+                    </div>
+                    <div class="row mt-5 fs-4">
+                        <div>Ce lien expire dans 1 heure</div>
+                    </div>
+                    <div class="row mt-5 fs-4">
+                        <div>Si vous n'avez rien reçu merci de regarder vos spams ou de cliquer <a style="color:#ff9966" class="text-decoration-none" href="{{ path('app_forgot_password_request') }}" ><span class="create">ici</span></a>.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+{% endblock %}

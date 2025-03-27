@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Conditions Page{% endblock %}
+
+{% block body %}
+    <body style="background: #0F75AD">
+        <div class="container text-center text-white">
+            <div class="row vh-100 justify-content-center align-items-center">
+                <div class="col-6">
+                    <div class="row justify-content-center fs-2">
+                        <div class="col-10">
+                            {% for message in app.flashes('success') %}
+                                <div class="alert alert-success">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="row mb-4 fs-2">
+                        <div class="col-10">
+                            {% for message in app.flashes('verify_email_error') %}
+                                <div class="alert alert-danger">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <a href="{{ path('app_login') }}" class="fs-5 text-white text-decoration-none" ><span class="underline">Retour connexion</span></a>
+                </div>
+            </div>
+        </div>
+    </body>
+{% endblock %}

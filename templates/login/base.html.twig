@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}{% endblock %}</title>
+        {% block stylesheets %}{% endblock %}
+    </head>
+    <body>
+        <!-- Navbar -->
+        <div class="sticky-top bg-white">
+            {% block body %}{% endblock %}
+            <nav class="navbar mt-2">
+                <div class="container">
+                    <div class="row vw-100 align-items-center">
+                        <div class="col-xxl-3 col-xl-3 col-lg-3 col-md-4 col-sm-4 col-8">
+                            <div class="input-group">
+                                <div class="input-group-text text-white" style="background-color: #0F75AD" id="addon-wrapping"><i class="bi bi-search"></i></div>
+                                <input id="search" class="search form-control border-black" placeholder="Recherche" aria-label="Recherche" aria-describedby="Recherche">
+                            </div>
+                        </div>
+                        <div class="col-xxl-6 col-xl-6 col-lg-6 col-md-4 col-sm-4 col-4 text-center"><img src="{{ asset('build/images/niit.png') }}" class="img-niit img-fluid" alt="logo"></div>
+                        <div class="nav-btn-ticket col-xxl-3 col-xl-3 col-lg-3 col-md-4 col-sm-4 col-8 text-center">
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle border-black text-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">Filtrer</button>
+                                <ul class="dropdown-menu border-black">
+                                    <li id="dropRécent" class="dropdown-item" style="cursor: pointer">Récent</li>
+                                    <li id="dropAncien" class="dropdown-item" style="cursor: pointer">Ancien</li>
+                                    <li id="dropPriorité" class="dropdown-item" style="cursor: pointer">Priorité haute</li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">Catégories</a>
+                                        <ul class="dropdown-submenu dropdown-menu border-black">
+                                            <li id="dropMail" class="dropdown-item" style="cursor: pointer">Messagerie</li>
+                                            <li id="dropServeur" class="dropdown-item" style="cursor: pointer">Serveur</li>
+                                            <li id="dropDolibarr" class="dropdown-item" style="cursor: pointer">Dolibarr</li>
+                                            <li id="dropInternet" class="dropdown-item" style="cursor: pointer">Internet</li>
+                                            <li id="dropImprimante" class="dropdown-item" style="cursor: pointer">Imprimante</li>
+                                            <li id="dropLogiciel" class="dropdown-item" style="cursor: pointer">Logiciel</li>
+                                            <li id="dropMatériel" class="dropdown-item" style="cursor: pointer">Matériel</li>
+                                            <li id="dropAutre" class="dropdown-item" style="cursor: pointer">Autre</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <button id="buttonTicketOpen" type="button" class="reduce btn text-white"><i class="bi bi-pencil-square px-1"></i> New Ticket</button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <nav class="navbar pb-0">
+                <div class="container" style="border-bottom: black 1px groove">
+                    <ul class="nav nav-custom">
+                        <li class="nav-item">
+                            <a id="waitingTicket" class="nav-link" style="font-size: 1.3rem"  aria-current="page" href="#waiting_tickets"><i class="bi bi-envelope-plus"></i> Tickets en attente</a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="inProgressTicket" class="nav-link" style="font-size: 1.3rem" href="#inProgress_tickets"><i class="bi bi-envelope-open"></i> Tickets en cours</a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="resolvedTicket" class="nav-link" style="font-size: 1.3rem" href="#resolved_tickets"><i class="bi bi-envelope-check"></i> Tickets résolus</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <!-- Tickets -->
+        <div id="appTicket" class="container"></div>
+        <!--Animation loading -->
+        <div id="spinner" class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <!--Animation no Ticket -->
+        <div class="nothing d-none">
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="shadow"></div>
+            <div class="shadow"></div>
+            <div class="shadow"></div>
+            <span>RIEN POUR LE MOMENT</span>
+        </div>
+        <!--Modal -->
+        <div id="modalTicket" class="modalTicket fixed-top overflow-auto">
+            <div class="container">
+                {{ form_start(TicketForm) }}
+                <div class="row text-white vh-100 justify-content-center align-items-center">
+                    <div class="modalContent col-xxl-7 col-xl-7 col-lg-7 col-md-10 col-sm-12 col-12 px-4 rounded-4">
+                        <div class="row">
+                            <div class="col-xxl-1 col-xl-1 col-lg-2 col-md-2 col-sm-2 col-2"></div>
+                            <div class="col-xxl-10 col-xl-10 col-lg-8 col-md-8 col-sm-8 col-8 text-center">
+                                <div class="wrapper mx-auto">
+                                    <span data-text="Nouveau"></span>
+                                    <span data-text="Ticket"></span>
+                                </div>
+                            </div>
+                            <div class="col-xxl-1 col-xl-1 col-lg-2 col-md-2 col-sm-2 col-2 mt-2">
+                                <button type="button" class="buttonTicketClose float-end" aria-label="close modal">
+                                    <span class="icon-cross"></span>
+                                    <span class="visually-hidden">Close</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-xxl-5 col-xl-5 col-lg-6 col-md-6 col-sm-7 col-7 mb-3">
+                                <label class="form-label" for="inputGroupSelect01">Categorie</label>
+                                <select name="{{ field_name(TicketForm.category) }}" class="search form-select" id="inputGroupSelect01" required>
+                                    <option value="">Choisir...</option>
+                                    {% for label, value in field_choices(TicketForm.category) %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-5 col-5">
+                                <label class="form-label" for="inputGroupSelect01">Priorité</label>
+                                <select name="{{ field_name(TicketForm.priority) }}" class="search form-select" id="inputGroupSelect01" required>
+                                    <option value="">Choisir...</option>
+                                    {% for label, value in field_choices(TicketForm.priority) %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-xxl-5 col-xl-5 col-lg-6 col-md-6 col-sm-9 col-9 mb-3">
+                                <label for="exampleFormControlInput1" class="form-label">Titre</label>
+                                <input name="{{ field_name(TicketForm.title) }}" type="text" class="search form-control" id="exampleFormControlInput1" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="exampleFormControlTextarea1" class="form-label">Description</label>
+                                <textarea name="{{ field_name(TicketForm.description) }}" class="search form-control" id="exampleFormControlTextarea1" rows="5" required></textarea>
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-8 text-center">
+                                {{ form_label(TicketForm.imageFile, '', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(TicketForm.imageFile, {'attr': {'class': 'form-control UploadImg'}}) }}
+                                <input type="submit" id="submit" class="mt-4 mb-4" value="ENVOYER"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{ form_end(TicketForm) }}
+            </div>
+        </div>
+        {% block javascripts %}{% endblock %}
+    </body>
+</html>

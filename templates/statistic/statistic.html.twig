@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistic{% endblock %}
+
+{% block javascripts %}{% endblock %}
+
+{% block body %}
+    <body style="background: #0F75AD">
+        <div class="container text-white d-flex flex-column justify-content-center" style="min-height: 100vh">
+            <!-- Première ligne : 9 colonnes, la première vide -->
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col border d-flex align-items-center justify-content-center fw-bold p-2">Messagerie</div>
+                <div class="col border d-flex align-items-center justify-content-center fw-bold p-2">Serveur</div>
+                <div class="col border d-flex align-items-center justify-content-center fw-bold p-2">Dolibarr</div>
+                <div class="col border d-flex align-items-center justify-content-center fw-bold p-2">Internet</div>
+                <div class="col border d-flex align-items-center justify-content-center fw-bold p-2">Imprimante</div>
+                <div class="col border d-flex align-items-center justify-content-center fw-bold p-2">Logiciel</div>
+                <div class="col border d-flex align-items-center justify-content-center fw-bold p-2">Matériel</div>
+                <div class="col border d-flex align-items-center justify-content-center fw-bold p-2">Autre</div>
+            </div>
+            <!-- Deuxième ligne : 9 colonnes, la première avec "Nombre de pannes" -->
+            <div class="row mt-3">
+                <div class="col-1 border d-flex align-items-center text-center p-1">Nombre de tickets</div>
+                <div class="col border d-flex align-items-center justify-content-center">Valeur 1</div>
+                <div class="col border d-flex align-items-center justify-content-center">Valeur 2</div>
+                <div class="col border d-flex align-items-center justify-content-center">Valeur 3</div>
+                <div class="col border d-flex align-items-center justify-content-center">Valeur 4</div>
+                <div class="col border d-flex align-items-center justify-content-center">Valeur 5</div>
+                <div class="col border d-flex align-items-center justify-content-center">Valeur 6</div>
+                <div class="col border d-flex align-items-center justify-content-center">Valeur 7</div>
+                <div class="col border d-flex align-items-center justify-content-center">Valeur 8</div>
+            </div>
+            <div class="row mt-5">
+                <div class="text-center">
+                    <a href="{{ path('app_modify_information_admin') }}" class="text-white text-decoration-none" ><span class="underline">Retour page informations</span></a>
+                </div>
+            </div>
+        </div>
+    </body>
+{% endblock %}

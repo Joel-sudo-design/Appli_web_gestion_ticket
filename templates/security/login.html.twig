@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Login Page{% endblock %}
+
+{% block javascripts %}
+    {{ encore_entry_script_tags('login') }}
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row vh-100 align-content-between justify-content-center">
+            <div class="row h-25 justify-content-center align-items-center">
+                <div class="col-xxl-3 col-xl-4 col-lg-5 col-md-6 col-sm-8 col-8 text-center mt-4">
+                    <img src="{{ asset('build/images/niit.png')}}" class="img-fluid load-hidden" alt="logo" />
+                </div>
+            </div>
+            <div class="row h-50 justify-content-center align-items-center" id="login">
+                <div class="col-xxl-3 col-xl-4 col-lg-5 col-md-6 col-sm-8 col-8">
+                    <form method="post" action="{{ path('app_login') }}">
+                        {% for message in app.flashes('verify_email_error') %}
+                            <div class="text-danger mb-2">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                        {% if error %}
+                            <div class="text-danger mb-2">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                        {% endif %}
+                        <div id="name" class="input-container load-hidden">
+                            <input type="text" value="{{ last_username }}" class="input" name="username" id="inputUsername" autocomplete="username" required autofocus/>
+                            <label class="label" for="inputUsername">Nom d'utilisateur</label>
+                        </div>
+                        <div id="pass" class="input-container mt-3 load-hidden">
+                            <input type="password" name="password" class="input inputPassword" id="inputPassword" autocomplete="current-password" required>
+                            <label class="label" for="inputPassword">Mot de passe</label>
+                            <span id="eye-password"><i class="bi bi-eye-slash" id="hide_eye"></i><i class="bi bi-eye d-none" id="show_eye"></i></span>
+                        </div>
+                        <div class="mdp text-end mt-1 load-hidden">
+                            <a class="text-white text-decoration-none" href="{{ path('app_forgot_password_request') }}">
+                                <span class="underline">Mot de passe oublié</span>
+                            </a>
+                        </div>
+                        <div class="new mt-4 mb-1 load-hidden"><a style="color:#ff9966" class="text-decoration-none creation" href="{{ path('app_register') }}">
+                                <span class="fw-semibold create">Nouveau compte</span></a>
+                        </div>
+                        <div id="button" class="d-flex flex-column load-hidden">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}"/>
+                            <input type="submit" id="submit" value="CONNEXION"/>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
