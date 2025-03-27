@@ -1,0 +1,40 @@
+name: Déploiement continu
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code source
+        uses: actions/checkout@v3
+
+      - name: Configurer l'agent SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Ajouter votre serveur aux known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p 49648 -H 151.80.59.103 >> ~/.ssh/known_hosts
+
+      - name: Déployer sur le serveur
+        run: |
+          ssh -p 49648 debian@151.80.59.103 "cd /var/www/appli_web/ && \
+          git fetch origin && \
+          git reset --hard origin/main && \
+          sudo chmod +x bin/console && \
+          composer install --no-interaction --prefer-dist && \
+          composer dump-env prod && \
+          bin/console cache:clear && \
+          if [ \"\$(ls -A migrations)\" ]; then \
+            bin/console doctrine:migrations:migrate --no-interaction; \
+          else \
+            echo 'Aucune migration à exécuter'; \
+          fi && \
+          sudo chmod -R 777 ."
