@@ -89,9 +89,6 @@ WORKDIR /var/www/appli_web
 COPY --from=builder /usr/bin/composer /usr/bin/composer
 COPY --from=builder /var/www/appli_web /var/www/appli_web
 
-# Ajuster les permissions pour l'utilisateur Apache (www-data)
-RUN chown -R www-data:www-data /var/www/appli_web
-
 # Exposer le port HTTP
 EXPOSE 80
 

@@ -13,4 +13,7 @@ composer run-script post-install-cmd
 echo "⏳ Build des assets..."
 yarn install && yarn build
 
+echo "🔧 Ajustement des permissions pour www-data..."
+chown -R www-data:www-data /var/www/appli_web
+
 exec apache2-foreground
