@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Document\Statistic;
 use App\Email\EmailTicket;
 use App\Entity\OpenTicket;
 use App\Entity\Ticket;
@@ -10,7 +11,9 @@ use App\Form\CreationTicketFormType;
 use App\Form\ModifyInformationFormType;
 use App\Repository\TicketRepository;
 use App\Repository\TicketResponseRepository;
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,35 +25,71 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/home')]
 class LoginController extends AbstractController
 {
-    public function __construct(private EmailTicket $emailTicket)
+    private $logger;
+    public function __construct(private EmailTicket $emailTicket, LoggerInterface $logger )
     {
+        $this->logger = $logger;
     }
-    #[Route('', name: 'app_home')]
-    public function home(Request $request, EntityManagerInterface $entityManager, TicketRepository $ticketRepository): Response
+    public function home(Request $request, EntityManagerInterface $entityManager, TicketRepository $ticketRepository, DocumentManager $dm): Response
     {
-        $Ticket = new Ticket();
-        $form = $this->createForm(CreationTicketFormType::class, $Ticket);
+        $ticket = new Ticket();
+        $form = $this->createForm(CreationTicketFormType::class, $ticket);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
             $user = $this->getUser();
-            $Ticket->setUser($user);
-            $Ticket->setStatus('En attente');
-            $Object = new \DateTime('now');
-            $Ticket->setDate($Object);
-            $entityManager->persist($Ticket);
-            $entityManager->flush();
+            $statistic = new Statistic();
+            $statistic->setCategory($ticket->getCategory());
+            $statistic->setId($user->getId());
+            $ticket->setUser($user);
+            $ticket->setStatus('En attente');
+            $ticket->setDate(new \DateTime('now'));
 
-            $this->emailTicket->sendEmailCreationTicket($user, $ticketRepository,
-                (new TemplatedEmail())
-                    ->from(new Address('joeldermont@gmail.com', 'NIIT - Support technique'))
-                    ->to(new Address('joeldermont@gmail.com', 'NIIT - Support technique'))
-                    ->subject('Création nouveau ticket')
-                    ->htmlTemplate('email/creation_ticket.html.twig')
-            );
+            try {
+                // Début de la transaction pour l'EntityManager
+                $entityManager->beginTransaction();
 
-            return $this->redirectToRoute('app_home');
+                // Sauvegarde du ticket en base de données relationnelle
+                $entityManager->persist($ticket);
+                $entityManager->flush();
+
+                // Enregistrement dans MongoDB pour la statistique
+                $dm->persist($statistic);
+                $dm->flush();
+
+                // Commit de la transaction
+                $entityManager->commit();
+
+                // Envoi de l'email de notification
+                try {
+                    $this->emailTicket->sendEmailCreationTicket(
+                        $user,
+                        $ticketRepository,
+                        (new TemplatedEmail())
+                            ->from(new Address('joeldermont@gmail.com', 'NIIT - Support technique'))
+                            ->to(new Address('joeldermont@gmail.com', 'NIIT - Support technique'))
+                            ->subject('Création nouveau ticket')
+                            ->htmlTemplate('email/creation_ticket.html.twig')
+                    );
+                } catch (\Exception $e) {
+                    $this->logger->error('Erreur lors de l\'envoi d\'email : ' . $e->getMessage());
+                }
+
+                return $this->redirectToRoute('app_home');
+
+            } catch (\Exception $e) {
+                // Rollback en cas d'erreur lors de la sauvegarde
+                $entityManager->rollback();
+
+                // Log de l'erreur
+                $this->logger->error('Erreur lors de la création du ticket ou de la statistique : ' . $e->getMessage());
+
+                // Affichage d'un message d'erreur à l'utilisateur
+                $this->addFlash('error', 'Une erreur est survenue lors de la création de votre ticket.');
+
+                // Redirection ou affichage d'une vue d'erreur
+                return $this->redirectToRoute('app_home');
+            }
         }
 
         return $this->render('login/home.html.twig', [
