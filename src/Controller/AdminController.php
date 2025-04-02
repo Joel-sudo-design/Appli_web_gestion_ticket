@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Document\Statistic;
 use App\Email\EmailTicket;
 use App\Entity\OpenTicket;
 use App\Entity\Ticket;
@@ -14,6 +15,7 @@ use App\Repository\OpenTicketRepository;
 use App\Repository\TicketRepository;
 use App\Repository\TicketResponseRepository;
 use App\Security\EmailVerifier;
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -89,9 +91,21 @@ class AdminController extends AbstractController
         ]);
     }
     #[Route('/statistic', name: 'app_statistic_admin')]
-    public function statistic(): Response
+    public function statistic(DocumentManager $dm): Response
     {
-        return $this->render('statistic/statistic.html.twig');
+        $aggregation = $dm->createAggregationBuilder(Statistic::class)
+            ->group()
+            ->field('_id')->expression('$category')
+            ->field('count')->sum(1)
+            ->execute();
+
+        $result = [];
+        foreach ($aggregation as $entry) {
+            $result[$entry['_id']] = $entry['count'];
+        }
+        return $this->render('statistic/statistic.html.twig', [
+            'statistic' => $result,
+        ]);
     }
     #[Route('/waiting_tickets', name: 'app_admin_waiting_tickets')]
     public function waitingTicket(TicketRepository $TicketRepository): Response
