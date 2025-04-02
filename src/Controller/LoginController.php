@@ -30,6 +30,7 @@ class LoginController extends AbstractController
     {
         $this->logger = $logger;
     }
+    #[Route('/home', name: 'app_home')]
     public function home(Request $request, EntityManagerInterface $entityManager, TicketRepository $ticketRepository, DocumentManager $dm): Response
     {
         $ticket = new Ticket();
@@ -40,7 +41,6 @@ class LoginController extends AbstractController
             $user = $this->getUser();
             $statistic = new Statistic();
             $statistic->setCategory($ticket->getCategory());
-            $statistic->setId($user->getId());
             $ticket->setUser($user);
             $ticket->setStatus('En attente');
             $ticket->setDate(new \DateTime('now'));

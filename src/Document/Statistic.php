@@ -9,17 +9,13 @@ class Statistic
 {
     #[MongoDB\Id]
     private ?string $id = null;
+
     #[MongoDB\Field(type: 'string')]
     private ?string $category = null;
 
-    public function getId(): int
+    public function getId(): ?string
     {
         return $this->id;
-    }
-
-    public function setId(int $id): void
-    {
-        $this->id = $id;
     }
 
     public function getCategory(): ?string
