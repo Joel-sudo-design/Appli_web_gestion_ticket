@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_ENV: dev
+        APP_ENV: prod
     container_name: symfony_app
     volumes:
       - .:/var/www/appli_web:delegated   # Synchronisation bidirectionnelle du code source
@@ -15,8 +15,8 @@ services:
       - db
       - mongodb
     environment:
-      APP_ENV: dev
-      APP_DEBUG: 1
+      APP_ENV: prod
+      APP_DEBUG: 0
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
