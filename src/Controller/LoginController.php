@@ -30,7 +30,7 @@ class LoginController extends AbstractController
     {
         $this->logger = $logger;
     }
-    #[Route('/home', name: 'app_home')]
+    #[Route('', name: 'app_home')]
     public function home(Request $request, EntityManagerInterface $entityManager, TicketRepository $ticketRepository, DocumentManager $dm): Response
     {
         $ticket = new Ticket();
