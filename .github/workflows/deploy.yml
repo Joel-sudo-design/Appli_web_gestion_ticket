@@ -32,7 +32,8 @@ jobs:
           composer install --no-interaction --prefer-dist && \
           composer dump-env prod && \
           bin/console cache:clear && \
-          PENDING=\$(bin/console doctrine:migrations:status --no-interaction | grep 'New Migrations:' | awk '{print \$3}') && \
+          PENDING=\$(bin/console doctrine:migrations:status --no-interaction 
+          | grep 'New Migrations:' | awk '{print \$3}') && \
           if [ \"\$PENDING\" -gt 0 ]; then \
             bin/console doctrine:migrations:migrate --no-interaction; \
           else \
