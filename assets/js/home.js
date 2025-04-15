@@ -506,7 +506,7 @@ $("#dropAutre").click(function () {
 $(document).ready(function(){
     $("#search").on("keyup", function() {
         const value = $(this).val().toLowerCase();
-        $("#appTicket .row").filter(function() {
+        $("#appTicket .accordion-item").filter(function() {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
         });
     });
