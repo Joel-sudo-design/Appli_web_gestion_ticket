@@ -31,6 +31,7 @@ jobs:
           sudo chmod +x bin/console && \
           composer install --no-interaction --prefer-dist && \
           composer dump-env prod && \
+          yarn install && yarn build && \
           bin/console cache:clear && \
           PENDING=\$(bin/console doctrine:migrations:status --no-interaction | grep 'New Migrations:' | awk '{print \$3}') && \
           if [ \"\$PENDING\" -gt 0 ]; then \
