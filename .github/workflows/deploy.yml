@@ -13,6 +13,16 @@ jobs:
       - name: Récupérer le code source
         uses: actions/checkout@v3
 
+      - name: Configurer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo, pdo_mysql, mongodb
+          tools: composer
+
+      - name: Installer les dépendances système
+        run: sudo apt-get update && sudo apt-get install -y yarn
+
       - name: Configurer l'agent SSH
         uses: webfactory/ssh-agent@v0.5.4
         with:
