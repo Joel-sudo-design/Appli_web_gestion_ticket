@@ -10,7 +10,7 @@
 >
     <php>
         <server name="KERNEL_CLASS" value="App\Kernel" />
-        <server name="DATABASE_URL" value="mysql://root:root@localhost:3306/application_test?serverVersion=10.4.32-MariaDB" />
+        <server name="DATABASE_URL" value="mysql://root:root@symfony_db:3306/application?serverVersion=10.4.32-MariaDB" />
         <ini name="display_errors" value="1" />
         <ini name="error_reporting" value="-1" />
         <server name="APP_ENV" value="test" force="true" />

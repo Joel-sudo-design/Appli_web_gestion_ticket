@@ -54,8 +54,10 @@ class LoginController extends AbstractController
                 $entityManager->flush();
 
                 // Enregistrement dans MongoDB pour la statistique
-                $dm->persist($statistic);
-                $dm->flush();
+                if ($this->getParameter('kernel.environment') !== 'test') {
+                    $dm->persist($statistic);
+                    $dm->flush();
+                }
 
                 // Commit de la transaction
                 $entityManager->commit();
