@@ -141,4 +141,10 @@ class TicketControllerTest extends WebTestCase
     {
         return \App\Kernel::class;
     }
+
+    protected static function createKernel(array $options = []): \Symfony\Component\HttpKernel\KernelInterface
+    {
+        return new \App\Kernel('test', true);
+    }
+
 }
