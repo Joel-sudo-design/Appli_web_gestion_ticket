@@ -14,7 +14,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.3",
         "doctrine/mongodb-odm-bundle": "^5.1",
         "doctrine/orm": "^3.1",
-        "doctrine/persistence": "^3.4",
+        "doctrine/persistence": "^4.0",
         "league/flysystem-bundle": "^3.3",
         "symfony/console": "^7.0",
         "symfony/dotenv": "^7.0",
