@@ -7,8 +7,8 @@ services:
         APP_ENV: prod
     container_name: symfony_app
     volumes:
-      - .:/var/www/appli_web:delegated   # Synchronisation bidirectionnelle du code source
-      - public_build:/var/www/appli_web/public/build  # Volume pour les assets compilés
+      - .:/var/www/appli_web:delegated
+      - public_build:/var/www/appli_web/public/build
     ports:
       - "80:80"
     depends_on:
