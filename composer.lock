@@ -7786,16 +7786,16 @@
         },
         {
             "name": "vich/uploader-bundle",
-            "version": "v2.6.1",
+            "version": "v2.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dustin10/VichUploaderBundle.git",
-                "reference": "28d99f6678135ea61c7c67d6fb52fe63ac2937ee"
+                "reference": "0619f0831003a16c65c6e038833430318705cbe1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dustin10/VichUploaderBundle/zipball/28d99f6678135ea61c7c67d6fb52fe63ac2937ee",
-                "reference": "28d99f6678135ea61c7c67d6fb52fe63ac2937ee",
+                "url": "https://api.github.com/repos/dustin10/VichUploaderBundle/zipball/0619f0831003a16c65c6e038833430318705cbe1",
+                "reference": "0619f0831003a16c65c6e038833430318705cbe1",
                 "shasum": ""
             },
             "require": {
@@ -7888,9 +7888,9 @@
             ],
             "support": {
                 "issues": "https://github.com/dustin10/VichUploaderBundle/issues",
-                "source": "https://github.com/dustin10/VichUploaderBundle/tree/v2.6.1"
+                "source": "https://github.com/dustin10/VichUploaderBundle/tree/v2.8.1"
             },
-            "time": "2025-03-30T13:31:23+00:00"
+            "time": "2025-09-12T07:17:19+00:00"
         }
     ],
     "packages-dev": [
