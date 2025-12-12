@@ -68,8 +68,8 @@ class LoginController extends AbstractController
                         $user,
                         $ticketRepository,
                         (new TemplatedEmail())
-                            ->from(new Address('joeldermont@gmail.com', 'NIIT - Support technique'))
-                            ->to(new Address('joeldermont@gmail.com', 'NIIT - Support technique'))
+                            ->from(new Address('joeldermont@gmail.com', 'INFONEX - Support technique'))
+                            ->to(new Address('joeldermont@gmail.com', 'INFONEX - Support technique'))
                             ->subject('Création nouveau ticket')
                             ->htmlTemplate('email/creation_ticket.html.twig')
                     );
@@ -211,8 +211,8 @@ class LoginController extends AbstractController
         $entityManager->flush();
         $this->emailTicket->sendEmailModificationStatusTicket($user, $id, $title,
             (new TemplatedEmail())
-                ->from(new Address('joeldermont@gmail.com', 'NIIT - Support technique'))
-                ->to(new Address('joeldermont@gmail.com', 'NIIT - Support technique'))
+                ->from(new Address('joeldermont@gmail.com', 'INFONEX - Support technique'))
+                ->to(new Address('joeldermont@gmail.com', 'INFONEX - Support technique'))
                 ->subject('Réponse d\'un utilisateur')
                 ->htmlTemplate('email/answer_admin.html.twig')
         );

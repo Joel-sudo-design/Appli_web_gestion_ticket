@@ -286,7 +286,7 @@ body {
 }
 
 /* second navbar */
-.img-niit {
+.img-infonex {
     width: 9rem;
     height: auto;
 }
@@ -366,6 +366,7 @@ body {
     border: 2mm ridge white;
     transform: translateX(100%);
     transition: all 0.6s var(--bounceEasing);
+    will-change: transform, opacity;
 }
 
 .modalTicket.is-visible {
@@ -375,7 +376,7 @@ body {
 
 .modalTicket.is-visible .modalContent {
     opacity: 1;
-    transform: none;
+    transform: translateX(0);
     transition-delay: 0.1s;
 }
 
