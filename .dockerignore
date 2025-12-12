@@ -1,4 +1,49 @@
-node_modules
-vendor
-var
-build
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+Dockerfile.prod
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.test
+.env.prod.example
+
+# IDE
+.idea/
+
+# Logs
+var/log/*
+var/cache/*
+!var/log/.gitkeep
+!var/cache/.gitkeep
+
+# Tests
+tests/
+phpunit.xml
+phpunit.xml.dist
+.phpunit.result.cache
+
+# Build artifacts
+node_modules/
+public/build/
+public/ticket_image/
+vendor/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml

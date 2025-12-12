@@ -1,1 +1,0 @@
-{"version":1,"defects":{"App\\Tests\\TicketControllerTest::testTicketCreation":3,"App\\Tests\\TicketControllerTest::testWaitingTickets":4},"times":{"App\\Tests\\TicketControllerTest::testTicketCreation":1.879,"App\\Tests\\TicketControllerTest::testWaitingTickets":0.014}}

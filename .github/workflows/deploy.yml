@@ -1,0 +1,167 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Permet le déclenchement manuel
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies and build assets
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+          echo "✅ Assets buildés avec succès"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            # Se déplacer dans le répertoire de l'application
+            cd ${{ secrets.DEPLOY_PATH }}
+            
+            # Récupérer les dernières modifications
+            git pull origin main
+            
+            # Se connecter au registry GitHub
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Créer le fichier .env.prod à partir des secrets
+            cat > .env.prod << EOF
+            # Application
+            APP_ENV=${{ secrets.APP_ENV }}
+            APP_DEBUG=${{ secrets.APP_DEBUG }}
+            APP_SECRET=${{ secrets.APP_SECRET }}
+            
+            # Caddy/FrankenPHP
+            SERVER_NAME=${{ secrets.SERVER_NAME }}        
+            
+            # Database
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
+            
+            # MongoDB
+            MONGODB_DB=${{ secrets.MONGODB_DB }}    
+            
+            # Mailer
+            MAILER_DSN=${{ secrets.MAILER_DSN }}
+            
+            # Security          
+            TRUSTED_HOSTS=${{ secrets.TRUSTED_HOSTS }}      
+            
+            # Sécuriser le fichier .env.prod
+            chmod 600 .env.prod
+            
+            # Pull de la nouvelle image
+            docker compose -f docker-compose.prod.yml pull app
+            
+            # Arrêt et redémarrage des services
+            docker compose -f docker-compose.prod.yml up -d --no-deps --build app
+            
+            # Attendre que l'application soit prête
+            sleep 10
+            
+            # Vérifier le statut
+            docker compose -f docker-compose.prod.yml ps
+            
+            # Nettoyer les anciennes images
+            docker image prune -af --filter "until=24h"
+            
+            echo "✅ Déploiement terminé avec succès !"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            
+            # Vérifier que les conteneurs sont up
+            if docker compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+              echo "✅ Les conteneurs sont actifs"
+            else
+              echo "❌ Erreur: Les conteneurs ne sont pas actifs"
+              docker compose -f docker-compose.prod.yml logs --tail=50
+              exit 1
+            fi
+            
+            # Tester le health check
+            sleep 5
+            if curl -f http://localhost/health; then
+              echo "✅ Health check OK"
+            else
+              echo "❌ Health check échoué"
+              exit 1
+            fi
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🚀 Déploiement réussi sur ${{ secrets.SSH_HOST }}"
+          echo "🌐 Application accessible sur: ${{ secrets.SERVER_NAME }}"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Le déploiement a échoué"
+          echo "Consultez les logs pour plus de détails"
