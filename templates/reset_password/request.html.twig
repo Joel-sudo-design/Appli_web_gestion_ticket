@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modification mot de passe{% endblock %}
+
+{% block body %}
+    <body style="background: #0F75AD">
+        {% for flash_error in app.flashes('reset_password_error') %}
+            <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
+        {% endfor %}
+        <div class="container" style="background: #0F75AD">
+            <div class="request row vh-100 align-items-center justify-content-center">
+                {{ form_start(requestForm) }}
+                    <div class="row align-items-center justify-content-center text-white">
+                        <div class="fs-4 col text-center">Indiquez votre adresse mail et nous vous enverrons un lien</div>
+                    </div>
+                    <div class="row align-items-center justify-content-center">
+                        <div class="col-xxl-3 col-xl-3 col-lg-4 col-md-5 col-sm-6 col-7 mt-5">
+                            <div class="input-container">
+                                {{ form_widget(requestForm.emailAddress, {'attr': {'class': 'input'}}) }}
+                                {{ form_label(requestForm.emailAddress, 'Email', {'label_attr': {'class': 'label'}}) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row align-items-center justify-content-center">
+                        <div class="col-xxl-3 col-xl-3 col-lg-4 col-md-5 col-sm-6 col-7">
+                            <div class="d-flex flex-column">
+                                <button id="submit" class="mb-3 mt-3 text-center">ENVOYER</button>
+                                <span class="underline"><a href="{{ path('app_login') }}" id="lien" class="text-white text-decoration-none">Retour connexion</a></span>
+                            </div>
+                        </div>
+                    </div>
+                {{ form_end(requestForm) }}
+            </div>
+        </div>
+    </body>
+{% endblock %}

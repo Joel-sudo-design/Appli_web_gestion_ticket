@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Création compte{% endblock %}
+
+{% block body %}
+    <body style="background: #0F75AD">
+        <div class="container text-center text-white">
+            <div class="row vh-100 justify-content-center align-items-center">
+                <div class="col">
+                    <div class="row">
+                        <div class="fs-2">Compte crée</div>
+                    </div>
+                    <div class="row fs-4 mt-5">
+                        <div>Un email de validation a été envoyé, merci de vérifier votre messagerie</div>
+                    </div>
+                    <div class="row fs-4 mt-2">
+                        <div>S vous n'avez rien reçu, merci de vous identifier sur la page d'accueil pour générer un nouvel envoi</div>
+                    </div>
+                    <div class="row fs-5 mt-5">
+                        <a href="{{ path('app_login') }}" class="text-white text-decoration-none" ><span class="underline">Retour connexion</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+{% endblock %}

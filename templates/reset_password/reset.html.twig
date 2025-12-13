@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reset password{% endblock %}
+
+{% block body %}
+    <body style="background: #0F75AD">
+        <div class="container">
+            <div class="row vh-100 align-items-center justify-content-center">
+                <div class="col box box-register">
+                    {{ form_start(resetForm) }}
+                        <div class="text-white text-center text-decoration-underline mb-5 mt-4 fs-4 pt-4" style="text-underline-offset: max(4px)">Réinitialiser le mot de passe</div>
+                        <div style="margin-left: -1.2rem" class="error text-danger text-center">{{ form_errors(resetForm.plainPassword.first) }}</div>
+                        <div class="row justify-content-center">
+                            <div class="col-xxl-5 col-xl-5 col-lg-5 col-md-6 col-sm-8 col-8 mt-2">
+                                <div class="input-container">
+                                    {{ form_widget(resetForm.plainPassword.first, {'attr': {'class': 'input inputPassword'}}) }}
+                                    {{ form_label(resetForm.plainPassword.first, 'Nouveau', {'label_attr': {'class': 'label'}}) }}
+                                    <span id="eye-password"><i class="bi bi-eye-slash" id="hide_eye"></i><i class="bi bi-eye d-none" id="show_eye"></i></span>
+                                </div>
+                                <div id="requirements" class="mx-1 mt-3 mb-3">
+                                    <p class="requirement" id="length">Minimum 8 caractères</p>
+                                    <p class="requirement" id="lowercase">Minimum 1 lettre minuscule</p>
+                                    <p class="requirement" id="uppercase">Minimum 1 lettre majuscule</p>
+                                    <p class="requirement" id="number">Minimum 1 chiffre</p>
+                                    <p class="requirement" id="characters">Minimum 1 caratère spécial: #.-?!@$%^&*</p>
+                                </div>
+                            </div>
+                            <div class="col-xxl-5 col-xl-5 col-lg-5 col-md-6 col-sm-8 col-8 mt-2">
+                                <div class="input-container">
+                                    {{ form_widget(resetForm.plainPassword.second, {'attr': {'class': 'input inputConfirmPassword'}}) }}
+                                    {{ form_label(resetForm.plainPassword.second, 'Confirmer', {'label_attr': {'class': 'label'}}) }}
+                                    <span id="eye-confirm-password"><i class="bi bi-eye-slash" id="hide_eye2"></i><i class="bi bi-eye d-none" id="show_eye2"></i></span>
+                                </div>
+                                <div class="mx-1">
+                                    <p class="requirement hidden error" id="match">Les mots de passe sont différents</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center justify-content-center mt-5 pb-4">
+                            <div class="col-xxl-5 col-xl-4 col-lg-5 col-md-6 col-sm-8 col-8 mb-4">
+                                <div class="d-flex flex-column text-center">
+                                    <button id="submit" class="mb-3" type="submit">MODIFIER</button>
+                                    <a href="{{ path('app_login') }}" class="text-start text-white text-decoration-none" ><span id="lien" class="underline">Retour connexion</span></a>
+                                </div>
+                            </div>
+                        </div>
+                    {{ form_end(resetForm) }}
+                </div>
+            </div>
+        </div>
+    </body>
+{% endblock %}
+
+{% block javascripts %}
+    {{ encore_entry_script_tags('reset') }}
+{% endblock %}
