@@ -1,9 +1,8 @@
 # ==================================
-# Stage 1: Builder pour les dépendances PHP
+# Stage 1: Builder (deps PHP)
 # ==================================
 FROM dunglas/frankenphp:php8.3 AS builder
 
-# Installer les dépendances système pour compiler les extensions PHP
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libzip-dev \
@@ -14,7 +13,6 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Installer les extensions PHP nécessaires
 RUN install-php-extensions \
     zip \
     pdo_mysql \
@@ -23,36 +21,33 @@ RUN install-php-extensions \
     apcu \
     intl
 
-# Copier Composer depuis l'image officielle
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copier les fichiers de dépendances en premier pour optimiser le cache Docker
+# Cache Docker optimisé : dépendances d’abord
 COPY composer.json composer.lock symfony.lock ./
 
-# Installer les dépendances PHP optimisées pour production
+# IMPORTANT : ne pas désactiver les scripts en Symfony (risque prod)
 RUN composer install \
     --no-dev \
-    --no-scripts \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
     --classmap-authoritative \
     && composer clear-cache
 
-# Copier le code source après les dépendances pour meilleur cache
+# Copier le code source ensuite
 COPY . .
 
-# Optimiser l'autoloader de Composer
+# Autoloader optimisé
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 
 # ==================================
-# Stage 2: Image de production finale
+# Stage 2: Runtime (prod)
 # ==================================
 FROM dunglas/frankenphp:php8.3
 
-# Installer uniquement les dépendances runtime nécessaires
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libzip5 \
@@ -62,7 +57,6 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Installer les extensions PHP
 RUN install-php-extensions \
     zip \
     pdo_mysql \
@@ -71,7 +65,7 @@ RUN install-php-extensions \
     apcu \
     intl
 
-# Configuration OPcache optimisée pour 8GB RAM + JIT
+# OPcache (profil stable)
 RUN { \
     echo 'opcache.enable=1'; \
     echo 'opcache.enable_cli=1'; \
@@ -80,8 +74,7 @@ RUN { \
     echo 'opcache.max_accelerated_files=20000'; \
     echo 'opcache.validate_timestamps=0'; \
     echo 'opcache.revalidate_freq=0'; \
-    echo 'opcache.save_comments=0'; \
-    echo 'opcache.fast_shutdown=1'; \
+    echo 'opcache.save_comments=1'; \
     echo 'opcache.enable_file_override=1'; \
     echo 'opcache.max_wasted_percentage=10'; \
     echo 'opcache.jit=tracing'; \
@@ -90,17 +83,17 @@ RUN { \
     echo 'realpath_cache_ttl=600'; \
     } > /usr/local/etc/php/conf.d/opcache.ini
 
-# Configuration APCu pour 8GB RAM
+# APCu
 RUN { \
     echo 'apc.enabled=1'; \
-    echo 'apc.shm_size=512M'; \
+    echo 'apc.shm_size=256M'; \
     echo 'apc.ttl=7200'; \
     echo 'apc.enable_cli=1'; \
     echo 'apc.gc_ttl=3600'; \
     echo 'apc.entries_hint=4096'; \
     } > /usr/local/etc/php/conf.d/apcu.ini
 
-# Paramètres PHP de production
+# PHP prod
 RUN { \
     echo 'memory_limit=512M'; \
     echo 'max_execution_time=60'; \
@@ -117,7 +110,8 @@ RUN { \
     echo 'date.timezone=Europe/Paris'; \
     } > /usr/local/etc/php/conf.d/php-prod.ini
 
-# Optimisations session
+# Sessions (attention : cookie_secure en dur = piège)
+# -> on laisse Symfony gérer "cookie_secure: auto"
 RUN { \
     echo 'session.save_handler=files'; \
     echo 'session.save_path=/app/var/sessions'; \
@@ -125,36 +119,33 @@ RUN { \
     echo 'session.gc_divisor=1000'; \
     echo 'session.gc_maxlifetime=3600'; \
     echo 'session.cookie_httponly=1'; \
-    echo 'session.cookie_secure=1'; \
     echo 'session.use_strict_mode=1'; \
     } > /usr/local/etc/php/conf.d/session.ini
 
 WORKDIR /app
 
-# Copier vendor depuis le builder
+# Récupérer vendor depuis le builder
 COPY --from=builder /app/vendor ./vendor
 
-# Copier le code source
+# Copier le code (sera safe grâce au .dockerignore)
 COPY . .
 
-# Créer les répertoires nécessaires avec permissions complètes
+# Dossiers runtime
 RUN mkdir -p \
     var/cache/prod \
     var/log \
     var/sessions \
     var/caddy \
     public/ticket_image \
-    && chmod -R 777 var public/ticket_image
+    && chmod -R 775 var public/ticket_image || true
 
-# Copier entrypoint et Caddyfile (maintenant à la racine)
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 COPY Caddyfile /etc/caddy/Caddyfile
 
 EXPOSE 80 443
 
-# Health check optimisé
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f -A "HealthCheck" http://localhost/health || exit 1
+    CMD curl -fsS -A "HealthCheck" http://localhost/health || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
