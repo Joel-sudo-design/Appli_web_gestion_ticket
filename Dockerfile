@@ -138,14 +138,15 @@ COPY --from=builder /app/vendor ./vendor
 # Copier le code source
 COPY . .
 
-# Créer les répertoires nécessaires avec permissions complètes
+# Créer les répertoires nécessaires (prod)
 RUN mkdir -p \
     var/cache/prod \
     var/log \
     var/sessions \
     var/caddy \
     public/ticket_image \
-    && chmod -R 777 var public/ticket_image
+ && chmod -R 775 var \
+ && chmod -R 775 public/ticket_image
 
 # Copier entrypoint et Caddyfile
 COPY --chmod=755 entrypoint.sh /entrypoint.sh

@@ -2,13 +2,10 @@ name: appli_web_gestion_ticket
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/joel-sudo-design/appli_web_gestion_ticket:latest
     container_name: appli_web_gestion_ticket
     restart: always
     volumes:
-      - ./var:/app/var:delegated
       - ./public/ticket_image:/app/public/ticket_image:delegated
     ports:
       - "80:80"

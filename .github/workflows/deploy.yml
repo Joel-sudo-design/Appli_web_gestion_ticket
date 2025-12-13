@@ -77,12 +77,12 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            set -e
+
             cd ${{ secrets.DEPLOY_PATH }}
-            
-            git pull origin main
-            
+
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
+
             cat > .env << EOF
             APP_ENV=${{ secrets.APP_ENV }}
             APP_DEBUG=${{ secrets.APP_DEBUG }}
@@ -96,19 +96,16 @@ jobs:
             MAILER_DSN=${{ secrets.MAILER_DSN }}
             TRUSTED_HOSTS=${{ secrets.TRUSTED_HOSTS }}
             EOF
-            
+
             chmod 600 .env
-            
+
             docker compose -f docker-compose.yml pull app
-            
-            docker compose -f docker-compose.yml up -d --no-deps --build app
-            
-            sleep 10
-            
+            docker compose -f docker-compose.yml up -d --no-deps app
+
             docker compose -f docker-compose.yml ps
-            
+
             docker image prune -af --filter "until=24h"
-            
+
             echo "✅ Déploiement terminé avec succès !"
 
       - name: Verify deployment
@@ -119,21 +116,25 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            set -e
+
             cd ${{ secrets.DEPLOY_PATH }}
-            
+
             if docker compose -f docker-compose.yml ps | grep -q "Up"; then
               echo "✅ Les conteneurs sont actifs"
             else
               echo "❌ Erreur: Les conteneurs ne sont pas actifs"
-              docker compose -f docker-compose.yml logs --tail=50
+              docker compose -f docker-compose.yml logs --tail=80
               exit 1
             fi
-            
+
             sleep 5
+
             if curl -f http://localhost/health; then
               echo "✅ Health check OK"
             else
               echo "❌ Health check échoué"
+              docker compose -f docker-compose.yml logs --tail=80
               exit 1
             fi
 
