@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environnement de déploiement"
+        required: true
+        default: "production"
 
 env:
   REGISTRY: ghcr.io
