@@ -12,12 +12,13 @@ secrets.env
 /public/bundles/
 /public/build/
 /public/uploads/
+/public/ticket_image/
 .phpunit.result.cache
 
 # Docker
 docker-compose.override.yml
 
-# IDE
+# IDE - PHPStorm
 /.idea/
 
 # Node
@@ -45,3 +46,11 @@ deploy_key*
 *.cache
 /tmp/
 /temp/
+
+# PHPUnit
+/.phpunit.cache/
+
+# Backup files
+*.sql
+*.sql.gz
+*.dump

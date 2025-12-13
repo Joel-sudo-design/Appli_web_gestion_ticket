@@ -20,30 +20,46 @@ docker-compose.prod.yml
 # IDE
 .idea/
 
-# Logs
+# Logs et cache
 var/log/*
 var/cache/*
+var/sessions/*
 !var/log/.gitkeep
 !var/cache/.gitkeep
+!var/sessions/.gitkeep
 
 # Tests
 tests/
 phpunit.xml
 phpunit.xml.dist
 .phpunit.result.cache
+/.phpunit.cache/
 
 # Build artifacts
 node_modules/
 public/build/
 public/ticket_image/
-vendor/
+public/uploads/
 
 # Temporary files
 tmp/
 temp/
 *.tmp
+*.bak
+*.swp
 
 # CI/CD
 .github/
 .gitlab-ci.yml
 .travis.yml
+
+# Documentation
+README.md
+*.md
+docs/
+
+# SSH/Secrets
+*.pem
+*.key
+id_rsa*
+deploy_key*

@@ -1,0 +1,152 @@
+version: 2
+
+# Configuration pour regrouper les mises à jour
+# Permet d'avoir moins de PRs et plus de contrôle
+
+updates:
+  # ==========================================
+  # Dépendances Composer (Symfony)
+  # ==========================================
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Europe/Paris"
+    
+    # Regrouper les mises à jour
+    groups:
+      symfony:
+        patterns:
+          - "symfony/*"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "symfony/*"
+        update-types:
+          - "patch"
+    
+    # Limiter le nombre de PRs ouvertes
+    open-pull-requests-limit: 5
+    
+    # Labels pour identifier les PRs
+    labels:
+      - "dependencies"
+      - "composer"
+      - "automerge"
+    
+    # Ignorer certaines dépendances si besoin
+    ignore:
+      # Exemple : ignorer les mises à jour majeures de Doctrine
+      # - dependency-name: "doctrine/*"
+      #   update-types: ["version-update:semver-major"]
+    
+    # Préfixe pour les commits
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # ==========================================
+  # Images Docker
+  # ==========================================
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Europe/Paris"
+    
+    # Regrouper toutes les images Docker ensemble
+    groups:
+      docker-images:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    
+    # Limiter le nombre de PRs
+    open-pull-requests-limit: 3
+    
+    # Labels
+    labels:
+      - "dependencies"
+      - "docker"
+      - "automerge"
+    
+    # Préfixe pour les commits
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"
+
+  # ==========================================
+  # NPM/Yarn (Frontend assets Symfony)
+  # ==========================================
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Europe/Paris"
+    
+    # Regrouper les dépendances frontend
+    groups:
+      frontend:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    
+    # Limiter les PRs
+    open-pull-requests-limit: 3
+    
+    # Labels
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "automerge"
+    
+    # Ignorer les devDependencies majeures si tu veux
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    
+    # Préfixe pour les commits
+    commit-message:
+      prefix: "chore(npm)"
+      include: "scope"
+
+  # ==========================================
+  # GitHub Actions
+  # ==========================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Europe/Paris"
+    
+    # Regrouper toutes les actions ensemble
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    
+    # Labels
+    labels:
+      - "dependencies"
+      - "github-actions"
+    
+    # Préfixe
+    commit-message:
+      prefix: "chore(ci)"

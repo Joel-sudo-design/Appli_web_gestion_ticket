@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Permet le déclenchement manuel
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -72,56 +72,36 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            # Se déplacer dans le répertoire de l'application
             cd ${{ secrets.DEPLOY_PATH }}
             
-            # Récupérer les dernières modifications
             git pull origin main
             
-            # Se connecter au registry GitHub
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Créer le fichier .env.prod à partir des secrets
-            cat > .env.prod << EOF
-            # Application
+            cat > .env << EOF
             APP_ENV=${{ secrets.APP_ENV }}
             APP_DEBUG=${{ secrets.APP_DEBUG }}
             APP_SECRET=${{ secrets.APP_SECRET }}
-            
-            # Caddy/FrankenPHP
-            SERVER_NAME=${{ secrets.SERVER_NAME }}        
-            
-            # Database
+            SERVER_NAME=${{ secrets.SERVER_NAME }}
             DB_NAME=${{ secrets.DB_NAME }}
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
-            
-            # MongoDB
-            MONGODB_DB=${{ secrets.MONGODB_DB }}    
-            
-            # Mailer
+            MONGODB_DB=${{ secrets.MONGODB_DB }}
             MAILER_DSN=${{ secrets.MAILER_DSN }}
+            TRUSTED_HOSTS=${{ secrets.TRUSTED_HOSTS }}
+            EOF
             
-            # Security          
-            TRUSTED_HOSTS=${{ secrets.TRUSTED_HOSTS }}      
+            chmod 600 .env
             
-            # Sécuriser le fichier .env.prod
-            chmod 600 .env.prod
+            docker compose -f docker/prod/docker-compose.yml pull app
             
-            # Pull de la nouvelle image
-            docker compose -f docker-compose.prod.yml pull app
+            docker compose -f docker/prod/docker-compose.yml up -d --no-deps --build app
             
-            # Arrêt et redémarrage des services
-            docker compose -f docker-compose.prod.yml up -d --no-deps --build app
-            
-            # Attendre que l'application soit prête
             sleep 10
             
-            # Vérifier le statut
-            docker compose -f docker-compose.prod.yml ps
+            docker compose -f docker/prod/docker-compose.yml ps
             
-            # Nettoyer les anciennes images
             docker image prune -af --filter "until=24h"
             
             echo "✅ Déploiement terminé avec succès !"
@@ -136,16 +116,14 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             
-            # Vérifier que les conteneurs sont up
-            if docker compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+            if docker compose -f docker/prod/docker-compose.yml ps | grep -q "Up"; then
               echo "✅ Les conteneurs sont actifs"
             else
               echo "❌ Erreur: Les conteneurs ne sont pas actifs"
-              docker compose -f docker-compose.prod.yml logs --tail=50
+              docker compose -f docker/prod/docker-compose.yml logs --tail=50
               exit 1
             fi
             
-            # Tester le health check
             sleep 5
             if curl -f http://localhost/health; then
               echo "✅ Health check OK"
