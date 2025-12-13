@@ -55,7 +55,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # ==================================
 # Étape 6 : Script de démarrage
 # ==================================
-COPY entrypoint.sh /entrypoint.sh
+COPY docker/dev/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Répertoire de travail

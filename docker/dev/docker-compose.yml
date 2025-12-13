@@ -3,11 +3,11 @@ name: appli_web_gestion_ticket
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: docker/dev/Dockerfile
     container_name: appli_web_gestion_ticket_app
     volumes:
-      - ../../app:/app:cached
+      - ../..:/app:cached
       - node_modules:/app/node_modules
       - symfony_cache:/app/var/cache
       - symfony_logs:/app/var/log
