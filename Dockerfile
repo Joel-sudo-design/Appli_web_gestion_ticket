@@ -146,10 +146,6 @@ RUN mkdir -p \
     public/ticket_image \
     && chmod -R 777 var public/ticket_image
 
-# Warmer le cache Symfony en production
-RUN APP_ENV=prod APP_DEBUG=0 php bin/console cache:clear --no-warmup \
-    && APP_ENV=prod APP_DEBUG=0 php bin/console cache:warmup
-
 # Copier entrypoint et Caddyfile (maintenant à la racine)
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 COPY Caddyfile /etc/caddy/Caddyfile
