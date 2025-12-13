@@ -55,7 +55,7 @@ FROM dunglas/frankenphp:php8.3
 # Installer uniquement les dépendances runtime nécessaires
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libzip4 \
+        libzip5 \
         mariadb-client \
         curl \
         ca-certificates \
