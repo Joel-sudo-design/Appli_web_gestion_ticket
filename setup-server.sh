@@ -1,32 +1,35 @@
 #!/bin/bash
 
-# ==============================================
-# Script de préparation du serveur de production
-# ==============================================
-# Ce script doit être exécuté UNE FOIS sur le serveur de production
-# avant le premier déploiement via GitHub Actions
-
 set -e
 
 echo "🚀 Préparation du serveur pour le déploiement automatisé"
 echo "=========================================================="
 echo ""
 
-# Vérifier si on est root ou avec sudo
 if [ "$EUID" -ne 0 ]; then
     echo "❌ Ce script doit être exécuté en tant que root ou avec sudo"
     exit 1
 fi
 
-# Variables
 DEPLOY_USER=${DEPLOY_USER:-}
 DEPLOY_PATH=${DEPLOY_PATH:-}
 SSH_PORT=${SSH_PORT:-}
 
-# Vérifier que le port SSH est défini
+if [ -z "$DEPLOY_USER" ]; then
+    echo "❌ La variable DEPLOY_USER doit être définie"
+    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=2222 ./setup-server.sh"
+    exit 1
+fi
+
+if [ -z "$DEPLOY_PATH" ]; then
+    echo "❌ La variable DEPLOY_PATH doit être définie"
+    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=2222 ./setup-server.sh"
+    exit 1
+fi
+
 if [ -z "$SSH_PORT" ]; then
     echo "❌ La variable SSH_PORT doit être définie"
-    echo "   Exemple: SSH_PORT=2222 ./setup-server.sh"
+    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=2222 ./setup-server.sh"
     exit 1
 fi
 
@@ -44,16 +47,10 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
-# ==============================================
-# 1. Mise à jour du système
-# ==============================================
 echo ""
 echo "📦 Mise à jour du système..."
 apt update && apt upgrade -y
 
-# ==============================================
-# 2. Installation de Docker
-# ==============================================
 echo ""
 echo "🐳 Installation de Docker..."
 
@@ -61,24 +58,19 @@ if command -v docker &> /dev/null; then
     echo "✅ Docker est déjà installé"
     docker --version
 else
-    # Installer les dépendances
     apt install -y ca-certificates curl gnupg lsb-release
 
-    # Ajouter la clé GPG officielle de Docker
     install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     chmod a+r /etc/apt/keyrings/docker.gpg
 
-    # Ajouter le repository Docker pour Debian
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-    # Installer Docker
     apt update
     apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-    # Démarrer Docker
     systemctl enable docker
     systemctl start docker
 
@@ -86,27 +78,38 @@ else
     docker --version
 fi
 
-# ==============================================
-# 3. Création de l'utilisateur de déploiement
-# ==============================================
+echo ""
+echo "🔧 Configuration réseau Docker..."
+
+update-alternatives --set iptables /usr/sbin/iptables-legacy || true
+update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true
+
+modprobe br_netfilter || true
+
+cat > /etc/sysctl.d/99-docker.conf << 'EOF'
+net.ipv4.ip_forward=1
+net.bridge.bridge-nf-call-iptables=1
+net.bridge.bridge-nf-call-ip6tables=1
+EOF
+
+sysctl --system
+systemctl restart docker
+
+echo "✅ Réseau Docker configuré"
+
 echo ""
 echo "👤 Configuration de l'utilisateur de déploiement..."
 
 if id "$DEPLOY_USER" &>/dev/null; then
     echo "✅ L'utilisateur $DEPLOY_USER existe déjà"
 else
-    # Créer l'utilisateur
-    useradd -m -s /bin/bash $DEPLOY_USER
+    useradd -m -s /bin/bash "$DEPLOY_USER"
     echo "✅ Utilisateur $DEPLOY_USER créé"
 fi
 
-# Ajouter l'utilisateur au groupe docker
-usermod -aG docker $DEPLOY_USER
+usermod -aG docker "$DEPLOY_USER"
 echo "✅ Utilisateur $DEPLOY_USER ajouté au groupe docker"
 
-# ==============================================
-# 4. Installation de Git
-# ==============================================
 echo ""
 echo "📥 Installation de Git..."
 
@@ -119,43 +122,28 @@ else
     git --version
 fi
 
-# ==============================================
-# 5. Configuration des mises à jour automatiques
-# ==============================================
 echo ""
 echo "🔄 Configuration des mises à jour automatiques de sécurité..."
 
 apt install -y unattended-upgrades apt-listchanges
 
-# Configurer unattended-upgrades
 cat > /etc/apt/apt.conf.d/50unattended-upgrades << 'EOF'
-// Configuration des mises à jour automatiques
 Unattended-Upgrade::Allowed-Origins {
     "${distro_id}:${distro_codename}-security";
 };
 
-// Liste des paquets à ne pas mettre à jour automatiquement
 Unattended-Upgrade::Package-Blacklist {
     // "docker-ce";
     // "docker-ce-cli";
 };
 
-// Supprimer les dépendances inutiles
 Unattended-Upgrade::Remove-Unused-Dependencies "true";
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
 
-// Redémarrage automatique si nécessaire (DÉSACTIVÉ par défaut)
 Unattended-Upgrade::Automatic-Reboot "false";
-
-// Si reboot activé, à quelle heure (2h du matin)
 Unattended-Upgrade::Automatic-Reboot-Time "02:00";
-
-// Notifications par email (décommenter et configurer si besoin)
-// Unattended-Upgrade::Mail "admin@example.com";
-// Unattended-Upgrade::MailReport "on-change";
 EOF
 
-# Activer les mises à jour automatiques
 cat > /etc/apt/apt.conf.d/20auto-upgrades << 'EOF'
 APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Download-Upgradeable-Packages "1";
@@ -163,77 +151,44 @@ APT::Periodic::AutocleanInterval "7";
 APT::Periodic::Unattended-Upgrade "1";
 EOF
 
-# Activer et démarrer le service
 systemctl enable unattended-upgrades
 systemctl start unattended-upgrades
 
 echo "✅ Mises à jour automatiques de sécurité configurées"
-echo "   - Vérification quotidienne des patchs de sécurité"
-echo "   - Installation automatique (SANS redémarrage auto)"
-echo "   - Nettoyage des anciens paquets après 7 jours"
 
-# ==============================================
-# 6. Création du répertoire de déploiement
-# ==============================================
 echo ""
 echo "📁 Création du répertoire de déploiement..."
 
-# Créer le répertoire
-mkdir -p $DEPLOY_PATH
-chown -R $DEPLOY_USER:$DEPLOY_USER $DEPLOY_PATH
+mkdir -p "$DEPLOY_PATH"
+chown -R "$DEPLOY_USER":"$DEPLOY_USER" "$DEPLOY_PATH"
 
 echo "✅ Répertoire créé: $DEPLOY_PATH"
 
-# ==============================================
-# 7. Configuration du firewall (iptables pour Debian)
-# ==============================================
 echo ""
 echo "🔥 Configuration du firewall..."
 
-# Installer iptables-persistent pour Debian
 apt install -y iptables iptables-persistent
 
-# Configuration des règles iptables
-echo "Configuration des règles iptables..."
+iptables -C INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT
+iptables -C INPUT -i lo -j ACCEPT 2>/dev/null || iptables -A INPUT -i lo -j ACCEPT
+iptables -C INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 2>/dev/null || iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-# Effacer les règles existantes
-iptables -F
-iptables -X
-iptables -t nat -F
-iptables -t nat -X
-iptables -t mangle -F
-iptables -t mangle -X
+iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+iptables -C INPUT -p icmp --icmp-type echo-request -j ACCEPT 2>/dev/null || iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
 
-# Politique par défaut
 iptables -P INPUT DROP
-iptables -P FORWARD DROP
 iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
 
-# Autoriser le loopback
-iptables -A INPUT -i lo -j ACCEPT
+iptables -N DOCKER-USER 2>/dev/null || true
+iptables -C DOCKER-USER -j RETURN 2>/dev/null || iptables -A DOCKER-USER -j RETURN
 
-# Autoriser les connexions établies
-iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-
-# Autoriser SSH sur le port personnalisé
-iptables -A INPUT -p tcp --dport $SSH_PORT -j ACCEPT
-
-# Autoriser HTTP et HTTPS
-iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-
-# Autoriser le ping (optionnel)
-iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
-
-# Sauvegarder les règles
 netfilter-persistent save
 
 echo "✅ Firewall configuré avec iptables"
 iptables -L -v -n
 
-# ==============================================
-# 8. Installation et configuration de Fail2ban
-# ==============================================
 echo ""
 echo "🛡️  Installation de Fail2ban..."
 
@@ -245,16 +200,11 @@ else
     echo "✅ Fail2ban installé avec succès"
 fi
 
-# Créer la configuration locale pour SSH
 cat > /etc/fail2ban/jail.local << EOF
 [DEFAULT]
-# Ban des IPs pour 1 heure
 bantime = 3600
-# Fenêtre de temps pour compter les tentatives (10 minutes)
 findtime = 600
-# Nombre de tentatives avant ban
 maxretry = 5
-# Ignorer les IPs locales
 ignoreip = 127.0.0.1/8 ::1
 
 [sshd]
@@ -266,46 +216,39 @@ bantime = 7200
 findtime = 600
 EOF
 
-# Activer et démarrer Fail2ban
 systemctl enable fail2ban
 systemctl restart fail2ban
 
-# Attendre que Fail2ban démarre
 sleep 3
 
 echo "✅ Fail2ban configuré et démarré"
 fail2ban-client status sshd || echo "⚠️  Fail2ban démarre, vérifiez avec: sudo fail2ban-client status sshd"
 
-# ==============================================
-# 9. Configuration de logrotate
-# ==============================================
 echo ""
 echo "📊 Configuration de la rotation des logs..."
 
-cat > /etc/logrotate.d/appli-web-ticket << EOF
-$DEPLOY_PATH/var/log/*.log {
+cat > /etc/logrotate.d/appli-web-ticket << 'EOF'
+/var/lib/docker/containers/*/*.log {
     daily
     rotate 14
     compress
     delaycompress
     notifempty
     missingok
-    create 0644 $DEPLOY_USER $DEPLOY_USER
+    copytruncate
+    su root root
+    maxsize 100M
 }
 EOF
 
 echo "✅ Rotation des logs configurée"
 
-# ==============================================
-# Résumé
-# ==============================================
 echo ""
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║  ✅ Serveur prêt pour le déploiement automatisé !          ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Afficher les informations importantes
 echo "📊 Informations système:"
 echo "   - OS: $(lsb_release -d | cut -f2)"
 echo "   - Docker: $(docker --version)"
