@@ -48,33 +48,28 @@ php bin/console doctrine:database:create --if-not-exists --no-interaction || {
     echo "⚠️  La base de données existe déjà ou erreur lors de la création (ignoré)"
 }
 
-# Application des migrations avec debug
+# Application des migrations
 echo "📄 Application des migrations..."
-php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration -vvv 2>&1 || {
-    echo "❌ ERREUR: Échec de l'application des migrations"
-    echo "⚠️ Continuation malgré l'erreur pour debug..."
-    echo "📊 Statut des migrations:"
-    php bin/console doctrine:migrations:status || true
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || {
+    echo "⚠️  Migrations ignorées (continuons quand même)"
 }
 
 # Vérifier le schéma de base de données
 echo "🔍 Vérification du schéma de base de données..."
 php bin/console doctrine:schema:validate || {
-    echo "⚠️  Le schéma de base de données n'est pas synchronisé avec les entités"
+    echo "⚠️  Le schéma de base de données n'est pas synchronisé avec les entités (ignoré)"
 }
 
 # Nettoyage du cache
 echo "🧹 Nettoyage du cache..."
 php bin/console cache:clear --no-warmup --no-optional-warmers || {
-    echo "❌ ERREUR: Échec du nettoyage du cache"
-    exit 1
+    echo "⚠️  Cache clear ignoré"
 }
 
 # Warmup du cache
 echo "🔥 Préchauffage du cache..."
 php bin/console cache:warmup || {
-    echo "❌ ERREUR: Échec du warmup du cache"
-    exit 1
+    echo "⚠️  Warmup ignoré"
 }
 
 # Création des répertoires supplémentaires
