@@ -80,9 +80,6 @@ fi
 echo ""
 echo "🔧 Configuration réseau Docker (Debian 13 / nftables)..."
 
-# IMPORTANT: Ne PAS forcer iptables-legacy sur Debian 13
-# Docker fonctionne correctement avec iptables-nft/nftables.
-
 # Modules utiles (si dispo)
 modprobe br_netfilter || true
 
