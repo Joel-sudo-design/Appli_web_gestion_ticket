@@ -120,23 +120,51 @@ jobs:
 
             cd ${{ secrets.DEPLOY_PATH }}
 
+            # Vérification que les conteneurs sont actifs
             if docker compose -f docker-compose.yml ps | grep -q "Up"; then
               echo "✅ Les conteneurs sont actifs"
             else
               echo "❌ Erreur: Les conteneurs ne sont pas actifs"
-              docker compose -f docker-compose.yml logs --tail=80
+              docker compose -f docker-compose.yml logs --tail=100
               exit 1
             fi
 
-            sleep 5
+            # Attendre que l'application soit complètement démarrée
+            echo "⏳ Attente du démarrage complet de l'application..."
+            sleep 65
 
-            if curl -f http://localhost/health; then
-              echo "✅ Health check OK"
-            else
-              echo "❌ Health check échoué"
-              docker compose -f docker-compose.yml logs --tail=80
+            # Health check avec retry logic
+            max_attempts=5
+            attempt=1
+            health_check_passed=false
+
+            while [ $attempt -le $max_attempts ]; do
+              echo "🔍 Tentative $attempt/$max_attempts du health check..."
+            
+              if curl -f --connect-timeout 5 --max-time 10 http://localhost/health 2>/dev/null; then
+                echo "✅ Health check OK"
+                health_check_passed=true
+                break
+              fi
+            
+              if [ $attempt -lt $max_attempts ]; then
+                echo "⚠️  Tentative échouée, nouvelle tentative dans 5 secondes..."
+                sleep 5
+              fi
+            
+              attempt=$((attempt + 1))
+            done
+
+            if [ "$health_check_passed" = false ]; then
+              echo "❌ Health check échoué après $max_attempts tentatives"
+              echo "📋 Logs des dernières lignes:"
+              docker compose -f docker-compose.yml logs --tail=100
               exit 1
             fi
+
+            # Vérification finale du statut des conteneurs
+            echo "📊 État final des conteneurs:"
+            docker compose -f docker-compose.yml ps
 
       - name: Notify deployment success
         if: success()

@@ -90,7 +90,8 @@ if [ ! -w "var/cache" ] || [ ! -w "var/log" ]; then
     echo "⚠️  Attention: Problème de permissions sur var/cache ou var/log"
 fi
 
-# Créer un fichier de santé pour le healthcheck
+# Créer le fichier de santé APRÈS toutes les vérifications
+echo "🏥 Création du fichier health check..."
 mkdir -p public
 echo "OK" > public/health
 
