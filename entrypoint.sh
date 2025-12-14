@@ -48,11 +48,13 @@ php bin/console doctrine:database:create --if-not-exists --no-interaction || {
     echo "⚠️  La base de données existe déjà ou erreur lors de la création (ignoré)"
 }
 
-# Application des migrations
+# Application des migrations avec debug
 echo "📄 Application des migrations..."
-php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || {
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration -vvv 2>&1 || {
     echo "❌ ERREUR: Échec de l'application des migrations"
-    exit 1
+    echo "⚠️ Continuation malgré l'erreur pour debug..."
+    echo "📊 Statut des migrations:"
+    php bin/console doctrine:migrations:status || true
 }
 
 # Vérifier le schéma de base de données
