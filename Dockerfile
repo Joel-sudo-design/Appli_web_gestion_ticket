@@ -143,7 +143,6 @@ RUN mkdir -p \
     var/cache/prod \
     var/log \
     var/sessions \
-    var/caddy \
     public/ticket_image \
  && chmod -R 775 var \
  && chmod -R 775 public/ticket_image
