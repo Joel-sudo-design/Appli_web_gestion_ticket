@@ -26,9 +26,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Normalize image name to lowercase
-        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -81,6 +78,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             set -e
+
             cd ${{ secrets.DEPLOY_PATH }}
 
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -101,8 +99,81 @@ jobs:
 
             chmod 600 .env
 
-            docker compose pull app
-            docker compose up -d app
-            docker compose ps
+            docker compose -f docker-compose.yml pull app
+            docker compose -f docker-compose.yml up -d app
 
-            docker image prune -af --filter "until=24
+            docker compose -f docker-compose.yml ps
+
+            docker image prune -af --filter "until=24h"
+
+            echo "✅ Déploiement terminé avec succès !"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # Vérification que les conteneurs sont actifs
+            if docker compose -f docker-compose.yml ps | grep -q "Up"; then
+              echo "✅ Les conteneurs sont actifs"
+            else
+              echo "❌ Erreur: Les conteneurs ne sont pas actifs"
+              docker compose -f docker-compose.yml logs --tail=100
+              exit 1
+            fi
+
+            # Attendre que l'application soit complètement démarrée
+            echo "⏳ Attente du démarrage complet de l'application..."
+            sleep 65
+
+            # Health check avec retry logic
+            max_attempts=5
+            attempt=1
+            health_check_passed=false
+
+            while [ $attempt -le $max_attempts ]; do
+              echo "🔍 Tentative $attempt/$max_attempts du health check..."
+            
+              if curl -f --connect-timeout 5 --max-time 10 http://127.0.0.1/health 2>/dev/null; then
+                echo "✅ Health check OK"
+                health_check_passed=true
+                break
+              fi
+            
+              if [ $attempt -lt $max_attempts ]; then
+                echo "⚠️  Tentative échouée, nouvelle tentative dans 5 secondes..."
+                sleep 5
+              fi
+            
+              attempt=$((attempt + 1))
+            done
+
+            if [ "$health_check_passed" = false ]; then
+              echo "❌ Health check échoué après $max_attempts tentatives"
+              echo "📋 Logs des dernières lignes:"
+              docker compose -f docker-compose.yml logs --tail=100
+              exit 1
+            fi
+
+            # Vérification finale du statut des conteneurs
+            echo "📊 État final des conteneurs:"
+            docker compose -f docker-compose.yml ps
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🚀 Déploiement réussi sur ${{ secrets.SSH_HOST }}"
+          echo "🌐 Application accessible sur: ${{ secrets.SERVER_NAME }}"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Le déploiement a échoué"
+          echo "Consultez les logs pour plus de détails"
