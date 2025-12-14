@@ -1,8 +1,7 @@
 #!/bin/bash
-
 set -e
 
-echo "🚀 Préparation du serveur pour le déploiement automatisé"
+echo "🚀 Préparation du serveur pour le déploiement automatisé (Debian 13)"
 echo "=========================================================="
 echo ""
 
@@ -17,19 +16,19 @@ SSH_PORT=${SSH_PORT:-}
 
 if [ -z "$DEPLOY_USER" ]; then
     echo "❌ La variable DEPLOY_USER doit être définie"
-    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=2222 ./setup-server.sh"
+    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=51845 ./setup-server.sh"
     exit 1
 fi
 
 if [ -z "$DEPLOY_PATH" ]; then
     echo "❌ La variable DEPLOY_PATH doit être définie"
-    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=2222 ./setup-server.sh"
+    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=51845 ./setup-server.sh"
     exit 1
 fi
 
 if [ -z "$SSH_PORT" ]; then
     echo "❌ La variable SSH_PORT doit être définie"
-    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=2222 ./setup-server.sh"
+    echo "   Exemple: DEPLOY_USER=debian DEPLOY_PATH=/home/debian/app SSH_PORT=51845 ./setup-server.sh"
     exit 1
 fi
 
@@ -79,13 +78,15 @@ else
 fi
 
 echo ""
-echo "🔧 Configuration réseau Docker..."
+echo "🔧 Configuration réseau Docker (Debian 13 / nftables)..."
 
-update-alternatives --set iptables /usr/sbin/iptables-legacy || true
-update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true
+# IMPORTANT: Ne PAS forcer iptables-legacy sur Debian 13
+# Docker fonctionne correctement avec iptables-nft/nftables.
 
+# Modules utiles (si dispo)
 modprobe br_netfilter || true
 
+# Sysctl utiles pour Docker + ponts
 cat > /etc/sysctl.d/99-docker.conf << 'EOF'
 net.ipv4.ip_forward=1
 net.bridge.bridge-nf-call-iptables=1
@@ -93,9 +94,19 @@ net.bridge.bridge-nf-call-ip6tables=1
 EOF
 
 sysctl --system
+
+# Configuration explicite de Docker (évite les surprises)
+mkdir -p /etc/docker
+cat > /etc/docker/daemon.json << 'JSON'
+{
+  "iptables": true,
+  "icc": true
+}
+JSON
+
 systemctl restart docker
 
-echo "✅ Réseau Docker configuré"
+echo "✅ Réseau Docker configuré (iptables=true, icc=true)"
 
 echo ""
 echo "👤 Configuration de l'utilisateur de déploiement..."
@@ -165,29 +176,57 @@ chown -R "$DEPLOY_USER":"$DEPLOY_USER" "$DEPLOY_PATH"
 echo "✅ Répertoire créé: $DEPLOY_PATH"
 
 echo ""
-echo "🔥 Configuration du firewall..."
+echo "🔥 Configuration du firewall (nftables, compatible Docker)..."
 
-apt install -y iptables iptables-persistent
+# nftables nat/filter peut être géré par iptables-nft/Docker : on ne le casse pas.
+# On pose un pare-feu simple sur inet/filter pour INPUT.
+apt install -y nftables
 
-iptables -C INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT
-iptables -C INPUT -i lo -j ACCEPT 2>/dev/null || iptables -A INPUT -i lo -j ACCEPT
-iptables -C INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 2>/dev/null || iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+cat > /etc/nftables.conf << EOF
+#!/usr/sbin/nft -f
 
-iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-iptables -C INPUT -p icmp --icmp-type echo-request -j ACCEPT 2>/dev/null || iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+flush ruleset
 
-iptables -P INPUT DROP
-iptables -P OUTPUT ACCEPT
-iptables -P FORWARD ACCEPT
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy drop;
 
-iptables -N DOCKER-USER 2>/dev/null || true
-iptables -C DOCKER-USER -j RETURN 2>/dev/null || iptables -A DOCKER-USER -j RETURN
+    # Loopback
+    iifname "lo" accept
 
-netfilter-persistent save
+    # Connexions établies
+    ct state established,related accept
 
-echo "✅ Firewall configuré avec iptables"
-iptables -L -v -n
+    # SSH
+    tcp dport $SSH_PORT accept
+
+    # HTTP/HTTPS (Caddy)
+    tcp dport 80 accept
+    tcp dport 443 accept
+
+    # ICMP (ping)
+    ip protocol icmp icmp type echo-request accept
+    ip6 nexthdr icmpv6 icmpv6 type { echo-request, nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit, nd-router-advert } accept
+
+    # (optionnel) log des paquets droppés (décommenter si besoin)
+    # log prefix "nft-in-drop " flags all counter drop
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy accept;
+  }
+
+  chain output {
+    type filter hook output priority 0; policy accept;
+  }
+}
+EOF
+
+systemctl enable nftables
+systemctl restart nftables
+
+echo "✅ Firewall nftables configuré"
+echo "   (INPUT=drop avec exceptions, FORWARD/OUTPUT=accept pour compat Docker)"
 
 echo ""
 echo "🛡️  Installation de Fail2ban..."
@@ -261,7 +300,7 @@ echo "   - IP publique: $(curl -s ifconfig.me || echo 'N/A')"
 echo ""
 
 echo "🔒 Sécurité:"
-echo "   - Firewall: ✅ Configuré (iptables)"
+echo "   - Firewall: ✅ nftables (INPUT drop + exceptions, forward accept)"
 echo "   - Fail2ban: ✅ Actif (protection SSH)"
 echo "   - Port SSH: $SSH_PORT (non-standard)"
 echo "   - MAJ auto sécurité: ✅ Quotidiennes (sans reboot)"
@@ -270,11 +309,8 @@ echo ""
 echo "📝 Commandes utiles:"
 echo "   - Vérifier Fail2ban: fail2ban-client status sshd"
 echo "   - Débannir une IP: fail2ban-client set sshd unbanip <IP>"
-echo "   - Voir les règles iptables: iptables -L -v -n"
+echo "   - Voir règles nft: nft list ruleset"
+echo "   - Voir Docker info: docker info"
 echo "   - Logs Fail2ban: tail -f /var/log/fail2ban.log"
-echo "   - Logs MAJ auto: cat /var/log/unattended-upgrades/unattended-upgrades.log"
-echo "   - Forcer MAJ sécu: unattended-upgrade -d"
-echo "   - Vérifier MAJ dispo: apt list --upgradable"
 echo ""
-
 echo "🎉 Installation terminée avec succès !"
