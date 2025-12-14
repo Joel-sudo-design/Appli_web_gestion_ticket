@@ -100,7 +100,7 @@ jobs:
             chmod 600 .env
 
             docker compose -f docker-compose.yml pull app
-            docker compose -f docker-compose.yml up -d --no-deps app
+            docker compose -f docker-compose.yml up -d app
 
             docker compose -f docker-compose.yml ps
 
