@@ -14,12 +14,18 @@ if [ -z "$APP_SECRET" ] || [ ${#APP_SECRET} -lt 32 ]; then
     exit 1
 fi
 
-# Attendre que la base de données soit prête avec une VRAIE connexion PHP
-echo "⏳ Attente de la base de données..."
+# Extraire les infos de connexion depuis DATABASE_URL
+DB_HOST=$(echo $DATABASE_URL | sed -n 's|.*@\([^:]*\):.*|\1|p')
+DB_PORT=$(echo $DATABASE_URL | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
+DB_USER=$(echo $DATABASE_URL | sed -n 's|.*://\([^:]*\):.*|\1|p')
+DB_PASS=$(echo $DATABASE_URL | sed -n 's|.*://[^:]*:\([^@]*\)@.*|\1|p')
+
+# Attendre que la base de données soit prête
+echo "⏳ Attente de la base de données ($DB_HOST:$DB_PORT)..."
 MAX_TRIES=60
 COUNTER=0
 
-until php -r "new PDO(getenv('DATABASE_URL'));" 2>/dev/null; do
+until mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; do
   COUNTER=$((COUNTER+1))
   if [ $COUNTER -gt $MAX_TRIES ]; then
     echo "❌ Impossible de se connecter à la base de données après ${MAX_TRIES} tentatives"
@@ -30,7 +36,6 @@ until php -r "new PDO(getenv('DATABASE_URL'));" 2>/dev/null; do
 done
 echo "✅ Base de données prête !"
 
-# Reste du fichier identique...
 # Vérification des dépendances
 if [ ! -f "vendor/autoload.php" ]; then
   echo "❌ ERREUR: Les dépendances Composer ne sont pas installées !"
