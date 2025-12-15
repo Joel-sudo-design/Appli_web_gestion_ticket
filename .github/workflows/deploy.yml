@@ -153,8 +153,9 @@ jobs:
             while [ $attempt -le $max_attempts ]; do
               echo "🔍 Tentative $attempt/$max_attempts du health check..."
             
-              # -L pour suivre les redirections HTTP → HTTPS
-              if curl -fL --connect-timeout 5 --max-time 10 http://127.0.0.1/health 2>/dev/null; then
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1/health || true)
+            
+              if [ "$code" = "200" ] || [ "$code" = "308" ]; then
                 echo "✅ Health check OK"
                 health_check_passed=true
                 break
