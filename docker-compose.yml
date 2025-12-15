@@ -7,6 +7,7 @@ services:
     restart: always
     volumes:
       - ./public/ticket_image:/app/public/ticket_image:delegated
+      - ./.env:/app/.env:ro
     ports:
       - "80:80"
       - "443:443"
@@ -29,6 +30,8 @@ services:
       MAILER_DSN: ${MAILER_DSN}
 
       TRUSTED_HOSTS: ${TRUSTED_HOSTS}
+
+      TICKET_URL: ${TICKET_URL}
     networks:
       - app_network
 

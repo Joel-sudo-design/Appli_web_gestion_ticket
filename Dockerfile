@@ -138,9 +138,6 @@ COPY --from=builder /app/vendor ./vendor
 # Copier le code source
 COPY . .
 
-# Créer un .env minimal pour Symfony
-RUN echo "APP_ENV=prod" > .env && echo "APP_SECRET=dummy" >> .env
-
 # Créer les répertoires nécessaires
 RUN mkdir -p \
     var/cache/prod \

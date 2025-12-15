@@ -95,6 +95,7 @@ jobs:
             MONGODB_DB=${{ secrets.MONGODB_DB }}
             MAILER_DSN=${{ secrets.MAILER_DSN }}
             TRUSTED_HOSTS=${{ secrets.TRUSTED_HOSTS }}
+            TICKET_URL=${{ secrets.TICKET_URL }}
             EOF
 
             chmod 600 .env
