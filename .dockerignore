@@ -1,26 +1,19 @@
 # Git
 .git
 .gitignore
-.gitattributes
 
-# Docker
-Dockerfile
-Dockerfile.prod
-docker-compose.yml
-docker-compose.prod.yml
-.dockerignore
-
-# Environment
+# Environnements locaux
 .env
 .env.local
 .env.*.local
-.env.test
-.env.prod.example
 
 # IDE
 .idea/
 
-# Logs et cache
+# Dépendances locales
+node_modules/
+
+# Cache & logs runtime
 var/log/*
 var/cache/*
 var/sessions/*
@@ -28,37 +21,17 @@ var/sessions/*
 !var/cache/.gitkeep
 !var/sessions/.gitkeep
 
-# Tests
-tests/
-phpunit.xml
-phpunit.xml.dist
-.phpunit.result.cache
-/.phpunit.cache/
-
-# Build artifacts
-node_modules/
-public/build/
-public/ticket_image/
-public/uploads/
-
-# Temporary files
+# Fichiers temporaires
 tmp/
 temp/
 *.tmp
 *.bak
 *.swp
 
-# CI/CD
+# CI
 .github/
-.gitlab-ci.yml
-.travis.yml
 
-# Documentation
-README.md
-*.md
-docs/
-
-# SSH/Secrets
+# Clés / secrets
 *.pem
 *.key
 id_rsa*
