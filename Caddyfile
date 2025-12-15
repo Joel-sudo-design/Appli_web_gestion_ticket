@@ -32,8 +32,10 @@ www.support.joeldermont.fr {
 support.joeldermont.fr {
     root * /app/public
 
-    # FrankenPHP SANS worker mode (compatible Symfony 7.4)
-    php_server
+    # FrankenPHP
+    php_server {
+        worker /app/public/index.php
+    }
 
     # Compression optimisée
     encode {
