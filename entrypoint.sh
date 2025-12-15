@@ -38,10 +38,10 @@ fi
 
 # Création DB + migrations
 echo "🗄️  Création de la base de données..."
-php bin/console doctrine:database:create --if-not-exists --no-interaction || true
+php bin/console doctrine:database:create --if-not-exists --no-interaction
 
 echo "📄 Application des migrations..."
-php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || true
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
 
 # Cache
 echo "🧹 Nettoyage du cache..."
