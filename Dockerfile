@@ -138,14 +138,17 @@ COPY --from=builder /app/vendor ./vendor
 # Copier le code source
 COPY . .
 
-# Créer les répertoires nécessaires
+# Créer un .env minimal pour Symfony
+RUN echo "APP_ENV=prod" > .env && echo "APP_SECRET=dummy" >> .env
+
+# Créer les répertoires nécessaires (prod)
 RUN mkdir -p \
     var/cache/prod \
     var/log \
     var/sessions \
     public/ticket_image \
- && chmod -R 755 var \
- && chmod -R 755 public/ticket_image
+ && chmod -R 775 var \
+ && chmod -R 775 public/ticket_image
 
 # Copier entrypoint et Caddyfile
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
@@ -153,7 +156,7 @@ COPY Caddyfile /etc/caddy/Caddyfile
 
 EXPOSE 80 443
 
-# Health check
+# Health check optimisé
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
     CMD curl -f -A "HealthCheck" http://localhost/health || exit 1
 

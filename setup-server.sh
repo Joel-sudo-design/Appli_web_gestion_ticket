@@ -131,6 +131,3 @@ systemctl restart fail2ban
 # =============================
 echo ""
 echo "✅ VPS PRÊT POUR LE DÉPLOIEMENT"
-echo "➡ Docker OK"
-echo "➡ iptables simple et stable"
-echo "➡ FrankenPHP / Caddy READY"
