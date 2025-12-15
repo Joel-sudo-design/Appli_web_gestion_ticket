@@ -32,7 +32,7 @@ www.support.joeldermont.fr {
 support.joeldermont.fr {
     root * /app/public
 
-    # FrankenPHP avec worker mode (optimisé pour 4 vCPU)
+    # FrankenPHP avec worker mode
     php_server {
         worker /app/public/index.php
     }
