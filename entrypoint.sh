@@ -52,7 +52,7 @@ php bin/console cache:warmup
 
 # Permissions Caddy
 mkdir -p var/caddy
-chmod 755 var/caddy  # ← 755, pas 777 !
+chmod 755 var/caddy
 
 echo ""
 echo "╔════════════════════════════════════════╗"
