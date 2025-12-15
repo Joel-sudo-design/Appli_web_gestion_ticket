@@ -35,7 +35,6 @@ support.joeldermont.fr {
     # FrankenPHP avec worker mode (optimisé pour 4 vCPU)
     php_server {
         worker /app/public/index.php
-        num_workers 8
         max_requests 10000
     }
 
