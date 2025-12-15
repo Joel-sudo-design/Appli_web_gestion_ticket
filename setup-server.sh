@@ -24,13 +24,13 @@ apt update && apt upgrade -y
 # =============================
 # 2. FIREWALL BASE : IPTABLES
 # =============================
-# On désactive nftables MAIS on ne le supprime JAMAIS
+# On désactive
 systemctl disable --now nftables 2>/dev/null || true
 
 apt install -y iptables iptables-persistent netfilter-persistent
 
 # =============================
-# 3. DOCKER INSTALL (SAFE)
+# 3. DOCKER INSTALL
 # =============================
 if ! command -v docker >/dev/null; then
   apt install -y ca-certificates curl gnupg lsb-release
@@ -68,7 +68,7 @@ mkdir -p "$DEPLOY_PATH"
 chown -R "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_PATH"
 
 # =============================
-# 6. FIREWALL RULES (PROPRE)
+# 6. FIREWALL RULES
 # =============================
 systemctl stop docker || true
 

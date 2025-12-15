@@ -1,29 +1,145 @@
 {
+    # Pas d'interface admin en prod
     admin off
+    persist_config off
+
+    # Email pour Let's Encrypt
     email joeldermont@gmail.com
+
+    # Optimisations globales
+    servers {
+        protocols h1 h2 h3
+        timeouts {
+            read_body   30s
+            read_header 10s
+            write       90s
+            idle        180s
+        }
+        max_header_size 10KB
+    }
+
+    # Storage pour les certificats SSL
+    storage file_system {
+        root /app/var/caddy
+    }
 }
 
+# Redirection www vers non-www
 www.support.joeldermont.fr {
     redir https://support.joeldermont.fr{uri} permanent
 }
 
 support.joeldermont.fr {
     root * /app/public
+
+    # FrankenPHP SANS worker mode (compatible Symfony 7.4)
     php_server
-    encode gzip
-    file_server
 
-    # Cache assets
-    @static path *.css *.js *.jpg *.jpeg *.png *.gif *.ico *.svg *.woff *.woff2
-    header @static Cache-Control "public, max-age=31536000"
-
-    # Sécurité
-    header {
-        X-Frame-Options "SAMEORIGIN"
-        X-Content-Type-Options "nosniff"
-        Strict-Transport-Security "max-age=31536000"
+    # Compression optimisée
+    encode {
+        zstd
+        gzip 6
+        minimum_length 256
+        match {
+            header Content-Type text/*
+            header Content-Type application/json*
+            header Content-Type application/javascript*
+            header Content-Type application/xml*
+            header Content-Type image/svg+xml*
+        }
     }
 
+    file_server {
+        precompressed zstd gzip
+    }
+
+    # Cache des assets statiques (1 an)
+    @static {
+        path *.css *.js *.jpg *.jpeg *.png *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot *.webp *.avif
+    }
+    header @static {
+        Cache-Control "public, max-age=31536000, immutable"
+        Vary "Accept-Encoding"
+    }
+
+    # Cache pour les images uploadées (1 semaine)
+    @uploads {
+        path /uploads/*
+    }
+    header @uploads {
+        Cache-Control "public, max-age=604800"
+        Vary "Accept-Encoding"
+    }
+
+    # Pas de cache pour les pages dynamiques
+    @dynamic {
+        not path *.css *.js *.jpg *.jpeg *.png *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot *.webp *.avif
+        not path /uploads/*
+    }
+    header @dynamic {
+        Cache-Control "no-cache, no-store, must-revalidate"
+    }
+
+    # Headers de sécurité renforcés
+    header {
+        # Protection XSS et clickjacking
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+
+        # HSTS (1 an avec preload)
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+        # Permissions restrictives
+        Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()"
+
+        # Content Security Policy (à adapter)
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'"
+
+        # Masquer la signature du serveur
+        -Server
+        -X-Powered-By
+    }
+
+    # Bloquer l'accès aux fichiers sensibles
+    @forbidden {
+        path *.env* *.md *.yml *.yaml composer.* package.* webpack.* .git*
+        path /var/* /vendor/* /node_modules/* /config/* /src/* /tests/* /bin/*
+        path /.* /Dockerfile* /docker-compose.*
+    }
+    respond @forbidden 404
+
     # Health check
-    respond /health 200
+    respond /health 200 {
+        close
+    }
+
+    # Logs en JSON
+    log {
+        output file /app/var/log/caddy_access.log {
+            roll_size 100mb
+            roll_keep 20
+            roll_keep_for 720h
+        }
+        format json {
+            time_format "iso8601"
+        }
+        level INFO
+    }
+
+    # Gestion d'erreurs
+    handle_errors {
+        @404 {
+            expression {http.error.status_code} == 404
+        }
+        @5xx {
+            expression {http.error.status_code} >= 500
+        }
+
+        rewrite @404 /index.php
+        rewrite @5xx /index.php
+    }
 }
