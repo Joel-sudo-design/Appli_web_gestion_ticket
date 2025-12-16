@@ -47,8 +47,6 @@ security:
                 - App\Security\ApiTokenAuthenticator
 
     access_control:
-        - { path: ^/login_api, roles: PUBLIC_ACCESS }
-
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/home, roles: ROLE_USER }
         - { path: ^/api/waiting_ticket_android, roles: IS_AUTHENTICATED_FULLY }
