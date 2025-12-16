@@ -43,8 +43,7 @@ const updateRequirement = (id, valid) => {
         requirement.classList.remove("valid");
     }
 };
-
-if (password) {password.addEventListener("input", (event) => {
+password.addEventListener("input", (event) => {
     const value = event.target.value;
 
     updateRequirement("length", value.length >= 8);
@@ -52,7 +51,7 @@ if (password) {password.addEventListener("input", (event) => {
     updateRequirement("uppercase", /[A-Z]/.test(value));
     updateRequirement("number", /\d/.test(value));
     updateRequirement("characters", /[#.?!@$%^&*-]/.test(value));
-});}
+});
 
 emailAddress.addEventListener("focus", (event) => {
     matchEmail.classList.add("hidden");
