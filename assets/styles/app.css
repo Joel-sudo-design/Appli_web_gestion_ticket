@@ -692,14 +692,6 @@ input#conditions:hover {
         background-attachment: scroll;
         background-position: center center;
     }
-
-    .container {
-        height: 100vh;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
 }
 @media (min-width: 576px) and (max-width: 767px) and (orientation: landscape) {
 
