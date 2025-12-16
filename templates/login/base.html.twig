@@ -111,8 +111,9 @@
                                 </select>
                             </div>
                             <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-5 col-5">
-                                <label class="form-label" for="inputGroupSelect01">Priorité</label>
-                                <select name="{{ field_name(TicketForm.priority) }}" class="search form-select" id="inputGroupSelect01" required>
+                                <label class="form-label" for="inputGroupSelect02">Priorité</label>
+                                <label for="inputGroupSelect02"></label>
+                                <select name="{{ field_name(TicketForm.priority) }}" class="search form-select" id="inputGroupSelect02" required>
                                     <option value="">Choisir...</option>
                                     {% for label, value in field_choices(TicketForm.priority) %}
                                         <option value="{{ value }}">{{ label }}</option>
