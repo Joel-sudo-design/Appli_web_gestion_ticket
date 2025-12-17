@@ -39,6 +39,8 @@ body {
     display: none;
 }
 
+.login, .reset-mdp, .information { overflow: hidden}
+
 .error ul {
     list-style-type: none;
 }
