@@ -1,10 +1,12 @@
 html, body {
-    overflow-x: hidden;
+    overflow: hidden;
     height: 100vh;
     width: 100vw;
     margin: 0;
     padding: 0;
 }
+
+body:has(.reset-mdp), html:has(.reset-mdp) {overflow: visible !important;}
 
 html.sr .load-hidden {
     visibility: hidden;
@@ -37,12 +39,6 @@ body {
 
 .hidden {
     display: none;
-}
-
-body:has(.login),
-body:has(.reset-mdp),
-body:has(.information) {
-    overflow-y: hidden;
 }
 
 .error ul {
