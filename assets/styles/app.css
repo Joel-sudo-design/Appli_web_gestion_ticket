@@ -39,7 +39,12 @@ body {
     display: none;
 }
 
-.login, .reset-mdp, .information { overflow: hidden}
+body:has(.login),
+body:has(.reset-mdp),
+body:has(.information) {
+    overflow: hidden;
+}
+
 
 .error ul {
     list-style-type: none;
