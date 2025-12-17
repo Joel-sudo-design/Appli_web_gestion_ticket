@@ -42,9 +42,8 @@ body {
 body:has(.login),
 body:has(.reset-mdp),
 body:has(.information) {
-    overflow: hidden;
+    overflow-y: hidden;
 }
-
 
 .error ul {
     list-style-type: none;
