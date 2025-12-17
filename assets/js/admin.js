@@ -278,9 +278,9 @@ function attachTicketEvents(obj, type) {
             const $rowAnswer = $(`#row-answer-${obj.id}-${answerIndex}`);
             const $answer = $(`#answer-${obj.id}-${answerIndex}`);
             ScrollReveal().reveal($rowAnswer[0], {
-                origin: 'left',
-                distance: '400px',
-                duration: 500,
+                origin: 'bottom',
+                distance: '200px',
+                duration: 400,
                 delay: 0,
                 easing: "ease-in-out",
                 beforeReveal: function () {
