@@ -60,7 +60,7 @@ services:
       driver: none
 
   phpmyadmin:
-    image: phpmyadmin:5.2
+    image: phpmyadmin:latest
     container_name: phpmyadmin_appli_web_gestion_ticket
     environment:
       PMA_HOST: db

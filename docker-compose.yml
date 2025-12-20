@@ -62,7 +62,7 @@ services:
       - app_network
 
   phpmyadmin:
-    image: phpmyadmin:5.2
+    image: phpmyadmin:latest
     container_name: phpmyadmin_appli_web_gestion_ticket
     restart: always
     environment:
