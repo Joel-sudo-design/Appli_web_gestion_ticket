@@ -1700,7 +1700,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     }>,
  *     proxy_namespace?: scalar|null, // Default: "MongoDBODMProxies"
  *     proxy_dir?: scalar|null, // Default: "%kernel.cache_dir%/doctrine/odm/mongodb/Proxies"
- *     enable_native_lazy_objects?: bool, // Deprecated: The "enable_native_lazy_objects" option is deprecated and will be removed in 6.0. Native Lazy Objects are enable by default when using PHP 8.4+ and doctrine/mongodb-odm 2.14+. // Requires PHP 8.4+ and doctrine/mongodb-odm 2.14+ // Default: false
+ *     enable_native_lazy_objects?: bool, // Deprecated: The "enable_native_lazy_objects" option is deprecated and will be removed in 6.0. Native Lazy Objects are enable by default when using PHP 8.4+ and doctrine/mongodb-odm 2.14+. // Requires PHP 8.4+ and doctrine/mongodb-odm 2.14+ // Default: true
  *     enable_lazy_ghost_objects?: bool, // Deprecated: The "enable_lazy_ghost_objects" option is deprecated and will be removed in 6.0. Native Lazy Objects are enable by default when using PHP 8.4+ and doctrine/mongodb-odm 2.14+. // Requires doctrine/mongodb-odm 2.12+ // Default: true
  *     auto_generate_proxy_classes?: scalar|null, // Default: 3
  *     hydrator_namespace?: scalar|null, // Default: "Hydrators"

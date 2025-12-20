@@ -1,7 +1,7 @@
 # ==================================
 # Stage 1: Builder pour les dépendances PHP
 # ==================================
-FROM dunglas/frankenphp:php8.3 AS builder
+FROM dunglas/frankenphp:php8.4 AS builder
 
 # Installer les dépendances système pour compiler les extensions PHP
 RUN apt-get update && \
@@ -51,7 +51,7 @@ RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 # ==================================
 # Stage 2: Image de production finale
 # ==================================
-FROM dunglas/frankenphp:php8.3
+FROM dunglas/frankenphp:php8.4
 
 # Installer uniquement les dépendances runtime nécessaires
 RUN apt-get update && \
