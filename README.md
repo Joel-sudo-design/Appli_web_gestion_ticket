@@ -15,7 +15,7 @@ Déploiement local : Docker
 
 ## Aperçu
 
-![Aperçu de l'application](apercu.png)
+![Aperçu de l'application](aperçu.png)
 
 ---
 
