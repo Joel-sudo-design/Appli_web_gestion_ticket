@@ -1,4 +1,4 @@
-# appli_web_gestion_ticket
+# Gestion ticket web
 
 Application Symfony de **gestion de tickets** (support et demandes techniques).
 
