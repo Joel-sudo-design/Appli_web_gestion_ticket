@@ -3,6 +3,13 @@ set -e
 
 echo "🚀 Démarrage de l'application..."
 
+# Création du dossier d'upload des tickets si absent
+if [ ! -d "public/ticket_image" ]; then
+  echo "📁 Création du dossier public/ticket_image"
+  mkdir -p public/ticket_image
+  chmod -R 775 public/ticket_image
+fi
+
 # Extraire les infos de connexion depuis DATABASE_URL
 DB_HOST=$(echo $DATABASE_URL | sed -n 's|.*@\([^:]*\):.*|\1|p')
 DB_PORT=$(echo $DATABASE_URL | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
