@@ -74,7 +74,7 @@ cd appli_web_gestion_ticket
 
 ### Configuration du fichier `.env`
 
-Créez (ou complétez) le fichier `.env` à la racine du projet avec les variables suivantes :
+Créez le fichier `.env` à la racine du projet avec les variables suivantes :
 
 ```env
 # Environnement
