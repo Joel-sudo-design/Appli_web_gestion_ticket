@@ -8,9 +8,12 @@ services:
     volumes:
       - ./public/ticket_image:/app/public/ticket_image:delegated
       - ./.env:/app/.env:ro
+      - caddy_data:/data
+      - caddy_config:/config
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     depends_on:
       - db
       - mongodb

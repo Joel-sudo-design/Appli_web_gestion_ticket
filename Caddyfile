@@ -3,27 +3,24 @@
     email joeldermont@gmail.com
 }
 
-www.support.joeldermont.fr {
-    redir https://support.joeldermont.fr{uri} permanent
-}
+support.joeldermont.fr, www.support.joeldermont.fr {
 
-support.joeldermont.fr {
+    @www host www.support.joeldermont.fr
+    redir @www https://support.joeldermont.fr{uri} permanent
+
     root * /app/public
     php_server
     encode gzip
     file_server
 
-    # Cache assets
     @static path *.css *.js *.jpg *.jpeg *.png *.gif *.ico *.svg *.woff *.woff2
     header @static Cache-Control "public, max-age=31536000"
 
-    # Sécurité
     header {
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
         Strict-Transport-Security "max-age=31536000"
     }
 
-    # Health check
     respond /health 200
 }
