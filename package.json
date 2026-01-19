@@ -1,7 +1,7 @@
 {
     "devDependencies": {
-        "@babel/core": "^7.28.5",
-        "@babel/preset-env": "^7.28.5",
+        "@babel/core": "^7.28.6",
+        "@babel/preset-env": "^7.28.6",
         "@popperjs/core": "^2.11.8",
         "@symfony/webpack-encore": "^5.3.1",
         "bootstrap": "^5.3.8",
