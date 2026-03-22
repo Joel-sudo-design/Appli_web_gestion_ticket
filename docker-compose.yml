@@ -56,7 +56,7 @@ services:
       - app_network
 
   mongodb:
-    image: mongo:8.0
+    image: mongo:8.2
     container_name: mongo_prod_appli_web_gestion_ticket
     restart: always
     volumes:
