@@ -39,7 +39,7 @@ services:
       - app_network
 
   db:
-    image: mariadb:11.4
+    image: mariadb:12.2.2
     container_name: symfony_db_prod_appli_web_gestion_ticket
     restart: always
     environment:
@@ -56,7 +56,7 @@ services:
       - app_network
 
   mongodb:
-    image: mongo:7.0
+    image: mongo:8.0
     container_name: mongo_prod_appli_web_gestion_ticket
     restart: always
     volumes:
@@ -65,7 +65,7 @@ services:
       - app_network
 
   phpmyadmin:
-    image: phpmyadmin:latest
+    image: phpmyadmin:5.2.3-apache
     container_name: phpmyadmin_appli_web_gestion_ticket
     restart: always
     environment:
@@ -79,7 +79,7 @@ services:
       - app_network
 
   mongo-express:
-    image: mongo-express:latest
+    image: mongo-express:1.0.2
     container_name: mongo_express_appli_web_gestion_ticket
     restart: always
     environment:
